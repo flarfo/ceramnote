@@ -17,6 +17,7 @@ export class ToolSystem {
     keybindMap: { [key: string]: string } = {};
     toolConfig: { [key: string]: any } = {};
     currentImageId: string | null = null;
+    viewport: {x: number, y: number, scale: number};
     setViewport: React.Dispatch<React.SetStateAction<{ x: number, y: number, scale: number }>>;
 
     constructor(setViewport: React.Dispatch<React.SetStateAction<{ x: number, y: number, scale: number }>>) {
@@ -26,6 +27,7 @@ export class ToolSystem {
             new PanTool(this),
         ];
         this.setViewport = setViewport;
+        this.viewport = {x: 0, y: 0, scale: 1};
         this.keybindMap = {}; // key: keybind, value: toolName
         this.toolConfig = {}; // Set config via useEffect onUpload?
     }
@@ -68,16 +70,16 @@ export class ToolSystem {
         if (this.currentTool) this.currentTool.onKeyDown(event);
     }
 
-    handleMouseDown(button: number, position: { x: number, y: number }) {
-        if (this.currentTool) this.currentTool.onMouseDown(button, position);
+    handleMouseDown(button: number, position: { x: number, y: number }, canvasRect: DOMRect) {
+        if (this.currentTool) this.currentTool.onMouseDown(button, position, canvasRect);
     }
 
-    handleMouseUp(button: number, position: { x: number, y: number }) {
-        if (this.currentTool) this.currentTool.onMouseUp(button, position);
+    handleMouseUp(button: number, position: { x: number, y: number }, canvasRect: DOMRect) {
+        if (this.currentTool) this.currentTool.onMouseUp(button, position, canvasRect);
     }
 
-    handleMouseMove(position: { x: number, y: number }) {
-        if (this.currentTool) this.currentTool.onMouseMove(position);
+    handleMouseMove(position: { x: number, y: number }, canvasRect: DOMRect) {
+        if (this.currentTool) this.currentTool.onMouseMove(position, canvasRect);
     }
 
     handleMouseLeave(event: React.MouseEvent<HTMLCanvasElement>) {

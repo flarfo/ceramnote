@@ -8,12 +8,12 @@ class PanTool extends ToolBase {
         this.lastPos = null;
     }
 
-    onMouseDown(button, position) {
+    onMouseDown(button, position, canvasRect) {
         this.isPanning = true;
         this.lastPos = position;
     }
 
-    onMouseMove(position) {
+    onMouseMove(position, canvasRect) {
         if (!this.isPanning || !this.lastPos) return;
         
         const dx = position.x - this.lastPos.x;
@@ -29,7 +29,7 @@ class PanTool extends ToolBase {
         this.lastPos = position;
     }
 
-    onMouseUp(button, position) {
+    onMouseUp(button, position, canvasRect) {
         this.isPanning = false;
         this.lastPos = null;
     }
