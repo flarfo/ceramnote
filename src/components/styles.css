@@ -1,0 +1,119 @@
+
+
+.MenubarRoot {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    background-color: var(--color-medium-light);
+}
+
+.MenubarTrigger {
+	padding: 8px 12px;
+	outline: none;
+	user-select: none;
+	font-weight: 500;
+	line-height: 1;
+	border-radius: 4px;
+	color: white;
+	font-size: 13px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 2px;
+}
+
+.MenubarTrigger[data-highlighted],
+.MenubarTrigger[data-state="open"] {
+	background-color: var(--color-dark);
+}
+
+.MenubarContent,
+.MenubarSubContent {
+	min-width: 220px;
+	background-color: var(--color-medium-light);
+	border-radius: 6px;
+	padding: 5px;
+    margin-top: 4px;
+	box-shadow:
+		0px 10px 38px -10px rgba(22, 23, 24, 0.5),
+		0px 10px 20px -15px rgba(22, 23, 24, 0.3);
+	animation-duration: 400ms;
+	animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+	will-change: transform, opacity;
+}
+
+.MenubarItem,
+.MenubarSubTrigger,
+.MenubarCheckboxItem,
+.MenubarRadioItem {
+	all: unset;
+	font-size: 13px;
+	line-height: 1;
+	color: white;
+	border-radius: 4px;
+	display: flex;
+	align-items: center;
+	height: 25px;
+	padding: 0 10px;
+	position: relative;
+	user-select: none;
+}
+
+.MenubarItem.inset,
+.MenubarSubTrigger.inset,
+.MenubarCheckboxItem.inset,
+.MenubarRadioItem.inset {
+	padding-left: 20px;
+}
+
+.MenubarItem[data-state="open"],
+.MenubarSubTrigger[data-state="open"] {
+	background-color: var(--color-dark);
+	color: var(--color-dark);
+}
+
+.MenubarItem[data-highlighted],
+.MenubarSubTrigger[data-highlighted],
+.MenubarCheckboxItem[data-highlighted],
+.MenubarRadioItem[data-highlighted] {
+	background-color: var(--color-dark);
+	color: white;
+}
+
+.MenubarItem[data-disabled],
+.MenubarSubTrigger[data-disabled],
+.MenubarCheckboxItem[data-disabled],
+.MenubarRadioItem[data-disabled] {
+	color: var(--color-medium);
+	pointer-events: none;
+}
+
+.MenubarItemIndicator {
+	position: absolute;
+	left: 0;
+	width: 20px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.MenubarSeparator {
+	height: 1px;
+	background-color: var(--color-medium);
+	margin: 5px;
+}
+
+.RightSlot {
+	margin-left: auto;
+	padding-left: 20px;
+	color: var(--color-dark);
+}
+
+[data-highlighted] > .RightSlot {
+	color: white;
+}
+
+[data-disabled] > .RightSlot {
+	color: var(--color-dark);
+}

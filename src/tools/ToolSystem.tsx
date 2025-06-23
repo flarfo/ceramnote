@@ -1,0 +1,125 @@
+// Global tool manager, this will handle the base logic driving all classes extending Tool (defined in ../tools/custom).
+// Iterate over all tools and create a list from which to render toolbar, identify current event overrides.
+// Store currentTool, handle keybindings, etc.
+import { ToolBase } from '@tools/Tool';
+import { Annotation } from '@components/Annotation';
+import AnnotationHandle from '@components/AnnotationHandle';
+import RectangleTool from '@tools/custom/Rectangle';
+import PanTool from '@tools/custom/Pan';
+import React, { type SetStateAction } from 'react';
+
+export class ToolSystem {
+    tools: ToolBase[] = [];
+    currentTool: ToolBase | null = null;
+    annotations: { [imageId: string]: any[] } = {};
+    selectedAnnotation: Annotation | null = null;
+    selectedHandle: AnnotationHandle | null = null;
+    keybindMap: { [key: string]: string } = {};
+    toolConfig: { [key: string]: any } = {};
+    currentImageId: string | null = null;
+    setViewport: React.Dispatch<React.SetStateAction<{ x: number, y: number, scale: number }>>;
+
+    constructor(setViewport: React.Dispatch<React.SetStateAction<{ x: number, y: number, scale: number }>>) {
+        // Register tools
+        this.tools = [
+            new RectangleTool(this),
+            new PanTool(this),
+        ];
+        this.setViewport = setViewport;
+        this.keybindMap = {}; // key: keybind, value: toolName
+        this.toolConfig = {}; // Set config via useEffect onUpload?
+    }
+
+    setCurrentTool(tool: ToolBase) {
+        this.currentTool = tool;
+        tool.onToolSelected(this);
+    }
+
+    addAnnotation(annotation: any) {
+        if (!this.currentImageId) return;
+        if (!this.annotations[this.currentImageId]) {
+            this.annotations[this.currentImageId] = [];
+        }
+        this.annotations[this.currentImageId].push(annotation);
+        this.setViewport((prev) => (prev));
+    }
+
+    selectAnnotation(annotation: Annotation) {
+        this.selectedAnnotation = annotation;
+    }
+
+    setCurrentImage(imageId: string) {
+        this.currentImageId = imageId;
+        if (!this.annotations[imageId]) {
+            this.annotations[imageId] = [];
+        }
+        this.selectedAnnotation = null;
+        this.selectedHandle = null;
+    }
+
+    // Event dispatchers
+    handleKeyDown(event: React.KeyboardEvent<HTMLCanvasElement>) {
+        const key = event.key.toLowerCase();
+        if (this.keybindMap[key]) {
+            const toolName = this.keybindMap[key];
+            const tool = this.tools.find(t => t.name === toolName);
+            if (tool) this.setCurrentTool(tool);
+        }
+        if (this.currentTool) this.currentTool.onKeyDown(event);
+    }
+
+    handleMouseDown(button: number, position: { x: number, y: number }) {
+        if (this.currentTool) this.currentTool.onMouseDown(button, position);
+    }
+
+    handleMouseUp(button: number, position: { x: number, y: number }) {
+        if (this.currentTool) this.currentTool.onMouseUp(button, position);
+    }
+
+    handleMouseMove(position: { x: number, y: number }) {
+        if (this.currentTool) this.currentTool.onMouseMove(position);
+    }
+
+    handleMouseLeave(event: React.MouseEvent<HTMLCanvasElement>) {
+        if (this.currentTool) this.currentTool.onMouseLeave(event);
+    }
+
+    handleKeyUp(event: React.KeyboardEvent<HTMLCanvasElement>) {
+        if (this.currentTool) this.currentTool.onKeyUp(event);
+    }
+}
+
+const ToolButton = ({ tool, selected, onClick }: { tool: ToolBase, selected: boolean, onClick: React.MouseEventHandler }) => {
+    const Icon = tool.icon;
+    return (
+        <button
+            style={{
+                border: selected ? '2px solid blue' : '1px solid #ccc',
+                background: selected ? '#eef' : '#fff',
+                margin: 4,
+                padding: 8,
+            }}
+            title={tool.name}
+            onClick={onClick}
+        >
+            <Icon width={24} height={24} style={{ color: `${selected ? '#FF0000' : '#000000'}` }} />
+        </button>
+    );
+};
+
+export const Toolbar = ({ toolSystem, onToolSelect }: { toolSystem: ToolSystem, onToolSelect: (tool: ToolBase) => void }) => {
+    return (
+        <div style={{ display: 'flex', flexDirection: 'row' }}>
+            {toolSystem.tools.map((tool) => (
+                <ToolButton
+                    key={tool.name}
+                    tool={tool}
+                    selected={toolSystem.currentTool === tool}
+                    onClick={() => onToolSelect(tool)}
+                />
+            ))}
+        </div>
+    );
+};
+
+export default ToolSystem;
