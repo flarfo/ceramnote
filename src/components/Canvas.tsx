@@ -2,14 +2,15 @@ import { useRef, useEffect, useState } from 'react';
 import type ToolSystem from '../tools/ToolSystem';
 
 interface CanvasProps {
-    draw: (ctx: CanvasRenderingContext2D) => void;
+    image: HTMLImageElement;
+    currentImageId: string;
     backgroundColor: string;
     toolSystem: ToolSystem;
     viewport: {x: number, y: number, scale: number};
 };
 
 const Canvas: React.FC<CanvasProps> = (props) => {
-    const { draw, backgroundColor, toolSystem, viewport } = props;
+    const { image, currentImageId, backgroundColor, toolSystem, viewport } = props;
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const canvasSize = {
         'x': window.innerWidth,
@@ -17,6 +18,56 @@ const Canvas: React.FC<CanvasProps> = (props) => {
     };
 
     const [mousePos, setMousePos] = useState<{x: number, y: number} | null>(null);
+
+    // Draw all annotations
+	const draw = (ctx: CanvasRenderingContext2D) => {
+		if (image) {
+			ctx.drawImage(image, 0, 0);
+		}
+
+		// Draw grid (optional, as before)
+		if (viewport) {
+			ctx.strokeStyle = `rgba(100,100,100,0.15)`;
+			ctx.lineWidth = 0.8 / viewport.scale;
+
+			const worldViewWidth = ctx.canvas.width / viewport.scale;
+			const worldViewHeight = ctx.canvas.height / viewport.scale;
+			const originXInView = -viewport.x / viewport.scale;
+			const originYInView = -viewport.y / viewport.scale;
+			const step = 100;
+			ctx.beginPath();
+			for (let x = Math.floor(originXInView / step) * step; x < originXInView + worldViewWidth; x += step) {
+				ctx.moveTo(x, originYInView);
+				ctx.lineTo(x, originYInView + worldViewHeight);
+			}
+
+			for (let y = Math.floor(originYInView / step) * step; y < originYInView + worldViewHeight; y += step) {
+				ctx.moveTo(originXInView, y);
+				ctx.lineTo(originXInView + worldViewWidth, y);
+			}
+
+			ctx.stroke();
+		}
+
+		// Draw rectangle annotations for the current image
+		const annots = (toolSystem?.annotations as any)?.[currentImageId] || [];
+		annots.forEach((annot: any) => {
+			if (annot.type === 'rectangle' && annot.bounds && annot.bounds.length === 2) {
+				const [start, end] = annot.bounds;
+				const x = Math.min(start.x, end.x);
+				const y = Math.min(start.y, end.y);
+				const w = Math.abs(end.x - start.x);
+				const h = Math.abs(end.y - start.y);
+				ctx.save();
+				ctx.strokeStyle = annot.color || '#FF0000';
+				ctx.lineWidth = 2 / (viewport?.scale || 1);
+				ctx.strokeRect(x, y, w, h);
+				ctx.fillStyle = `rgba(255, 0, 0, 0.25)`;
+				ctx.fillRect(x, y, w, h);
+				ctx.restore();
+			}
+		});
+	};
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -58,60 +109,40 @@ const Canvas: React.FC<CanvasProps> = (props) => {
         render();
     }, [draw, viewport, mousePos]);
 
-    const toCanvasCoords = (clientX: number, clientY: number, viewport: {x: number, y: number, scale: number}) => {
-        if (!canvasRef.current) return;
-
-        const rect = canvasRef.current.getBoundingClientRect();
-        // Subtract pan offset, then scale
-        let x = (clientX - rect.left - viewport.x) / viewport.scale;
-        let y = (clientY - rect.top - viewport.y) / viewport.scale;
-        return { x, y };
-    };
-
     // TODO: add tool default behaviours for certain button presses.
     // For example, select tool MMB should pan
-    // Fix jitter/jumping from Pan tool (caused by different coordinate
-    // systems for mouseUp/Down and Move) CURRENT SOLUTION SUCKS!
-
     return (
         <canvas
             ref={canvasRef}
             width={canvasSize.x}
             height={canvasSize.y}
             onMouseDown={(e) => {
-                if (toolSystem.currentTool?.name === 'Pan') {
-                    toolSystem.handleMouseDown(e.button, { x: e.clientX, y: e.clientY });
-                }
-                else {
-                    const pos = toCanvasCoords(e.clientX, e.clientY, viewport);
-                    if (pos) toolSystem.handleMouseDown(e.button, pos);
-                }
-            }}
-            onMouseUp={(e) => {
-                if (toolSystem.currentTool?.name === 'Pan') {
-                    toolSystem.handleMouseUp(e.button, { x: e.clientX, y: e.clientY });
-                }
-                else {
-                    const pos = toCanvasCoords(e.clientX, e.clientY, viewport);
-                    if (pos) toolSystem.handleMouseUp(e.button, pos);
-                }
-            }}
-            onMouseMove={(e) => {
-                if (canvasRef.current) {
-                    const rect = canvasRef.current.getBoundingClientRect();
-                    setMousePos({
-                        x: e.clientX - rect.left,
-                        y: e.clientY - rect.top
-                    });
+                if (!canvasRef.current) {
+                    return;
                 }
 
-                if (toolSystem.currentTool?.name === 'Pan') {
-                    toolSystem.handleMouseMove({ x: e.clientX, y: e.clientY });
+                toolSystem.handleMouseDown(e.button, { x: e.clientX, y: e.clientY }, canvasRef.current.getBoundingClientRect());
+            }}
+            onMouseUp={(e) => {
+                if (!canvasRef.current) {
+                    return;
                 }
-                else {
-                    const pos = toCanvasCoords(e.clientX, e.clientY, viewport);
-                    if (pos) toolSystem.handleMouseMove(pos);
+
+                toolSystem.handleMouseUp(e.button, { x: e.clientX, y: e.clientY }, canvasRef.current.getBoundingClientRect());
+            }}
+            onMouseMove={(e) => {
+                if (!canvasRef.current) {
+                    return;
+                    
                 }
+
+                const rect = canvasRef.current.getBoundingClientRect();
+                setMousePos({
+                    x: e.clientX - rect.left,
+                    y: e.clientY - rect.top
+                });
+
+                toolSystem.handleMouseMove({ x: e.clientX, y: e.clientY }, rect);
             }}
             onKeyDown={(e) => {
                 toolSystem.handleKeyDown(e);
