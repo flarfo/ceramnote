@@ -7,7 +7,7 @@ import {
 } from "@radix-ui/react-icons";
 import "./styles.css";
 
-const RADIO_ITEMS = ["Andy", "Benoît", "Luis"];
+const RADIO_ITEMS = ["Classes", "Keybinds", "Defaults"];
 const CHECK_ITEMS = ["Always Show Bookmarks Bar", "Always Show Full URLs"];
 
 const Filebar = () => {
@@ -28,18 +28,12 @@ const Filebar = () => {
 						alignOffset={-3}
 					>
 						<Menubar.Item className="MenubarItem">
-							New Tab <div className="RightSlot">⌘ T</div>
-						</Menubar.Item>
-						<Menubar.Item className="MenubarItem">
-							New Window <div className="RightSlot">⌘ N</div>
-						</Menubar.Item>
-						<Menubar.Item className="MenubarItem" disabled>
-							New Incognito Window
+							Open <div className="RightSlot">CTRL + O</div>
 						</Menubar.Item>
 						<Menubar.Separator className="MenubarSeparator" />
 						<Menubar.Sub>
 							<Menubar.SubTrigger className="MenubarSubTrigger">
-								Share
+								Export
 								<div className="RightSlot">
 									<ChevronRightIcon />
 								</div>
@@ -50,17 +44,14 @@ const Filebar = () => {
 									alignOffset={-5}
 								>
 									<Menubar.Item className="MenubarItem">
-										Email Link
+										Export All <div className="RightSlot">CTRL + Shift + E</div>
 									</Menubar.Item>
-									<Menubar.Item className="MenubarItem">Messages</Menubar.Item>
-									<Menubar.Item className="MenubarItem">Notes</Menubar.Item>
+									<Menubar.Item className="MenubarItem">
+										Export Current <div className="RightSlot">CTRL + Shift + I</div>
+									</Menubar.Item>
 								</Menubar.SubContent>
 							</Menubar.Portal>
 						</Menubar.Sub>
-						<Menubar.Separator className="MenubarSeparator" />
-						<Menubar.Item className="MenubarItem">
-							Print… <div className="RightSlot">⌘ P</div>
-						</Menubar.Item>
 					</Menubar.Content>
 				</Menubar.Portal>
 			</Menubar.Menu>
@@ -75,37 +66,11 @@ const Filebar = () => {
 						alignOffset={-3}
 					>
 						<Menubar.Item className="MenubarItem">
-							Undo <div className="RightSlot">⌘ Z</div>
+							Undo <div className="RightSlot">CTRL + Z</div>
 						</Menubar.Item>
 						<Menubar.Item className="MenubarItem">
-							Redo <div className="RightSlot">⇧ ⌘ Z</div>
+							Redo <div className="RightSlot">CTRL + Y</div>
 						</Menubar.Item>
-						<Menubar.Separator className="MenubarSeparator" />
-						<Menubar.Sub>
-							<Menubar.SubTrigger className="MenubarSubTrigger">
-								Find
-								<div className="RightSlot">
-									<ChevronRightIcon />
-								</div>
-							</Menubar.SubTrigger>
-
-							<Menubar.Portal>
-								<Menubar.SubContent
-									className="MenubarSubContent"
-									alignOffset={-5}
-								>
-									<Menubar.Item className="MenubarItem">
-										Search the web…
-									</Menubar.Item>
-									<Menubar.Separator className="MenubarSeparator" />
-									<Menubar.Item className="MenubarItem">Find…</Menubar.Item>
-									<Menubar.Item className="MenubarItem">Find Next</Menubar.Item>
-									<Menubar.Item className="MenubarItem">
-										Find Previous
-									</Menubar.Item>
-								</Menubar.SubContent>
-							</Menubar.Portal>
-						</Menubar.Sub>
 						<Menubar.Separator className="MenubarSeparator" />
 						<Menubar.Item className="MenubarItem">Cut</Menubar.Item>
 						<Menubar.Item className="MenubarItem">Copy</Menubar.Item>
@@ -162,7 +127,7 @@ const Filebar = () => {
 			</Menubar.Menu>
 
 			<Menubar.Menu>
-				<Menubar.Trigger className="MenubarTrigger">Profiles</Menubar.Trigger>
+				<Menubar.Trigger className="MenubarTrigger">Config</Menubar.Trigger>
 				<Menubar.Portal>
 					<Menubar.Content
 						className="MenubarContent"
@@ -189,9 +154,8 @@ const Filebar = () => {
 							<Menubar.Separator className="MenubarSeparator" />
 							<Menubar.Item className="MenubarItem inset">Edit…</Menubar.Item>
 							<Menubar.Separator className="MenubarSeparator" />
-							<Menubar.Item className="MenubarItem inset">
-								Add Profile…
-							</Menubar.Item>
+							<Menubar.Item className="MenubarItem inset">Import</Menubar.Item>
+							<Menubar.Item className="MenubarItem inset">Download</Menubar.Item>
 						</Menubar.RadioGroup>
 					</Menubar.Content>
 				</Menubar.Portal>

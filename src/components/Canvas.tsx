@@ -6,68 +6,71 @@ interface CanvasProps {
     currentImageId: string;
     backgroundColor: string;
     toolSystem: ToolSystem;
-    viewport: {x: number, y: number, scale: number};
+    viewport: { x: number, y: number, scale: number };
 };
 
 const Canvas: React.FC<CanvasProps> = (props) => {
     const { image, currentImageId, backgroundColor, toolSystem, viewport } = props;
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
     const canvasSize = {
         'x': window.innerWidth,
         'y': window.innerHeight
     };
 
-    const [mousePos, setMousePos] = useState<{x: number, y: number} | null>(null);
+    const [mousePos, setMousePos] = useState<{ x: number, y: number } | null>(null);
 
     // Draw all annotations
-	const draw = (ctx: CanvasRenderingContext2D) => {
-		if (image) {
-			ctx.drawImage(image, 0, 0);
-		}
+    const draw = (ctx: CanvasRenderingContext2D) => {
+        // screen = (world + viewport) * scale
+        // world = (screen / scale) - viewport
+        if (image) {
+            ctx.drawImage(image, 0, 0);
+        }
 
-		// Draw grid (optional, as before)
-		if (viewport) {
-			ctx.strokeStyle = `rgba(100,100,100,0.15)`;
-			ctx.lineWidth = 0.8 / viewport.scale;
+        // Draw grid (optional, as before)
+        if (viewport) {
+            ctx.strokeStyle = `rgba(100,100,100,0.15)`;
+            ctx.lineWidth = 0.8 / viewport.scale;
 
-			const worldViewWidth = ctx.canvas.width / viewport.scale;
-			const worldViewHeight = ctx.canvas.height / viewport.scale;
-			const originXInView = -viewport.x / viewport.scale;
-			const originYInView = -viewport.y / viewport.scale;
-			const step = 100;
-			ctx.beginPath();
-			for (let x = Math.floor(originXInView / step) * step; x < originXInView + worldViewWidth; x += step) {
-				ctx.moveTo(x, originYInView);
-				ctx.lineTo(x, originYInView + worldViewHeight);
-			}
+            const worldLeft = -viewport.x;
+            const worldTop = -viewport.y;
+            const worldRight = (ctx.canvas.width / viewport.scale) - viewport.x;
+            const worldBottom = (ctx.canvas.height / viewport.scale) - viewport.y;
+            const step = 100;
 
-			for (let y = Math.floor(originYInView / step) * step; y < originYInView + worldViewHeight; y += step) {
-				ctx.moveTo(originXInView, y);
-				ctx.lineTo(originXInView + worldViewWidth, y);
-			}
+            ctx.beginPath();
+            for (let x = Math.floor(worldLeft / step) * step; x < worldRight; x += step) {
+                ctx.moveTo(x, worldTop);
+                ctx.lineTo(x, worldBottom);
+            }
+            for (let y = Math.floor(worldTop / step) * step; y < worldBottom; y += step) {
+                ctx.moveTo(worldLeft, y);
+                ctx.lineTo(worldRight, y);
+            }
 
-			ctx.stroke();
-		}
+            ctx.stroke();
+        }
 
-		// Draw rectangle annotations for the current image
-		const annots = (toolSystem?.annotations as any)?.[currentImageId] || [];
-		annots.forEach((annot: any) => {
-			if (annot.type === 'rectangle' && annot.bounds && annot.bounds.length === 2) {
-				const [start, end] = annot.bounds;
-				const x = Math.min(start.x, end.x);
-				const y = Math.min(start.y, end.y);
-				const w = Math.abs(end.x - start.x);
-				const h = Math.abs(end.y - start.y);
-				ctx.save();
-				ctx.strokeStyle = annot.color || '#FF0000';
-				ctx.lineWidth = 2 / (viewport?.scale || 1);
-				ctx.strokeRect(x, y, w, h);
-				ctx.fillStyle = `rgba(255, 0, 0, 0.25)`;
-				ctx.fillRect(x, y, w, h);
-				ctx.restore();
-			}
-		});
-	};
+        // Draw rectangle annotations for the current image
+        const annots = (toolSystem?.annotations as any)?.[currentImageId] || [];
+        annots.forEach((annot: any) => {
+            if (annot.type === 'rectangle' && annot.bounds && annot.bounds.length === 2) {
+                const [start, end] = annot.bounds;
+                const x = Math.min(start.x, end.x);
+                const y = Math.min(start.y, end.y);
+                const w = Math.abs(end.x - start.x);
+                const h = Math.abs(end.y - start.y);
+                ctx.save();
+                ctx.strokeStyle = annot.color || '#FF0000';
+                ctx.lineWidth = 1 / (viewport?.scale || 1);
+                ctx.strokeRect(x, y, w, h);
+                ctx.fillStyle = `rgba(255, 0, 0, 0.25)`;
+                ctx.fillRect(x, y, w, h);
+                ctx.restore();
+            }
+        });
+    };
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -83,8 +86,8 @@ const Canvas: React.FC<CanvasProps> = (props) => {
             context.fillRect(0, 0, context.canvas.width, context.canvas.height);
 
             // Apply viewport transformations
-            context.translate(viewport.x, viewport.y);
             context.scale(viewport.scale, viewport.scale);
+            context.translate(viewport.x, viewport.y);
 
             draw(context);
 
@@ -114,6 +117,7 @@ const Canvas: React.FC<CanvasProps> = (props) => {
     return (
         <canvas
             ref={canvasRef}
+            tabIndex={0}
             width={canvasSize.x}
             height={canvasSize.y}
             onMouseDown={(e) => {
@@ -133,7 +137,7 @@ const Canvas: React.FC<CanvasProps> = (props) => {
             onMouseMove={(e) => {
                 if (!canvasRef.current) {
                     return;
-                    
+
                 }
 
                 const rect = canvasRef.current.getBoundingClientRect();
@@ -143,6 +147,17 @@ const Canvas: React.FC<CanvasProps> = (props) => {
                 });
 
                 toolSystem.handleMouseMove({ x: e.clientX, y: e.clientY }, rect);
+            }}
+            onWheel={(e) => {
+                if (!canvasRef.current) {
+                    return;
+                }
+
+                e.preventDefault();
+                toolSystem.handleScroll(e.deltaY, { x: e.clientX, y: e.clientY }, canvasRef.current.getBoundingClientRect())
+            }}
+            onScroll={(e) => {
+                e.preventDefault();
             }}
             onKeyDown={(e) => {
                 toolSystem.handleKeyDown(e);
