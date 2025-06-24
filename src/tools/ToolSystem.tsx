@@ -50,6 +50,10 @@ export class ToolSystem {
         this.annotations[this.currentImageId][annotation.id] = annotation;
     }
 
+    removeAnnotation(annotation: Annotation) {
+        delete this.annotations[this.currentImageId][annotation.id];
+    }
+
     selectAnnotations(annotationIDs: Annotation[]) {
         this.selectedAnnotationIDs = annotationIDs;
         this.setSelectedAnnotationIDs(annotationIDs);
