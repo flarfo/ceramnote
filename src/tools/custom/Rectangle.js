@@ -8,6 +8,7 @@ class RectangleTool extends ToolBase {
     constructor(toolSystem) {
         super(toolSystem, "Rectangle", SquareIcon, "R");
         this.startPoint = null;
+        this.curAnnotation = null;
     }
 
     onToolSelected() {
@@ -31,7 +32,8 @@ class RectangleTool extends ToolBase {
     // LMB
     onMB0(position, canvasRect) {
         if (!this.startPoint) {
-            this.startPoint = screenToWorld(position, this.toolSystem.viewport, canvasRect);
+            this.startPoint = screenToWorld(position, this.toolSystem.viewport, canvasRect)
+            this.curAnnotation = new Annotation("rectangle", 'rgba(255, 0, 0, 0.25)', [this.startPoint, this.startPoint]);
         } 
         else {
             // Second click: create rectangle annotation
@@ -40,8 +42,11 @@ class RectangleTool extends ToolBase {
                 screenToWorld(position, this.toolSystem.viewport, canvasRect)
             ];
 
-            const annotation = new Annotation("rectangle", 'rgba(255, 0, 0, 0.25)', bounds);
-            this.toolSystem.addAnnotation(annotation);
+            if (this.curAnnotation) {
+                this.curAnnotation.bounds = bounds;
+                this.toolSystem.addAnnotation(this.curAnnotation);
+            }
+
             this.startPoint = null;
         }
     }
@@ -54,12 +59,22 @@ class RectangleTool extends ToolBase {
     onMB2(position, canvasRect) {
     }
 
-    onMouseMove(event, canvasRect) {
-        // Could be used for live preview (not implemented here)
+    onMouseMove(position, canvasRect) {
+        // Live preview (if start point already set)
+        if (this.startPoint) {
+            const bounds = [
+                this.startPoint,
+                screenToWorld(position, this.toolSystem.viewport, canvasRect)
+            ];
+
+            this.curAnnotation.bounds = bounds;
+            this.toolSystem.addAnnotation(this.curAnnotation);
+        } 
     }
 
     onMouseLeave(event) {
         this.startPoint = null;
+        this.curAnnotation = null;
     }
 }
 

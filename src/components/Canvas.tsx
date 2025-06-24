@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 import type ToolSystem from '../tools/ToolSystem';
+import type { Annotation } from './Annotation';
 
 interface CanvasProps {
     image: HTMLImageElement;
@@ -53,8 +54,8 @@ const Canvas: React.FC<CanvasProps> = (props) => {
         }
 
         // Draw rectangle annotations for the current image
-        const annots = (toolSystem?.annotations as any)?.[currentImageId] || [];
-        annots.forEach((annot: any) => {
+        const annots = Object.values(toolSystem?.annotations?.[currentImageId] || []);
+        annots.forEach((annot: Annotation) => {
             if (annot.type === 'rectangle' && annot.bounds && annot.bounds.length === 2) {
                 const selected = toolSystem?.selectedAnnotationIDs.includes(annot.id);
 
