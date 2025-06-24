@@ -26,9 +26,10 @@ class SelectorTool extends ToolBase {
     // LMB
     onMB0(position, canvasRect) {
         const selectedAnnotationsIDs = [];
+        const annotations = Object.values(this.toolSystem.annotations[this.toolSystem.currentImageId]);
 
-        for (let i = 0; i < this.toolSystem.annotations[this.toolSystem.currentImageId].length; i++) {
-            const annotation = this.toolSystem.annotations[this.toolSystem.currentImageId][i];
+        for (let i = 0; i < annotations.length; i++) {
+            const annotation = annotations[i];
             const worldPos = screenToWorld(position, this.toolSystem.viewport, canvasRect);
 
             if (inBounds(worldPos, annotation.bounds)) {

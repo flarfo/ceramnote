@@ -13,7 +13,7 @@ import React, { type SetStateAction } from 'react';
 export class ToolSystem {
     tools: ToolBase[] = [];
     currentTool: ToolBase | null = null;
-    annotations: { [imageId: string]: Annotation[] } = {};
+    annotations: { [imageId: string]: { [annotationId: string]: Annotation } } = {};
     selectedAnnotationIDs: string[] = [];
     selectedHandle: AnnotationHandle | null = null;
     keybindMap: { [key: string]: string } = {};
@@ -42,12 +42,12 @@ export class ToolSystem {
         tool.onToolSelected(this);
     }
 
-    addAnnotation(annotation: any) {
-        if (!this.currentImageId) return;
+    addAnnotation(annotation: Annotation) {
         if (!this.annotations[this.currentImageId]) {
-            this.annotations[this.currentImageId] = [];
+            this.annotations[this.currentImageId] = {};
         }
-        this.annotations[this.currentImageId].push(annotation);
+
+        this.annotations[this.currentImageId][annotation.id] = annotation;
     }
 
     selectAnnotations(annotationIDs: Annotation[]) {
@@ -88,7 +88,7 @@ export class ToolSystem {
         if (this.currentTool) this.currentTool.onMouseMove(position, canvasRect);
     }
 
-    handleScroll(deltaY: number, position: {x: number, y: number}, canvasRect: DOMRect) {
+    handleScroll(deltaY: number, position: { x: number, y: number }, canvasRect: DOMRect) {
         if (this.currentTool) this.currentTool.onScroll(deltaY, position, canvasRect);
     }
 
