@@ -19,6 +19,10 @@ const Canvas: React.FC<CanvasProps> = (props) => {
         'y': window.innerHeight
     };
 
+    const devicePixelRatio = window.devicePixelRatio || 1;
+    const canvasWidth = canvasSize.x * devicePixelRatio;
+    const canvasHeight = canvasSize.y * devicePixelRatio;
+
     const [mousePos, setMousePos] = useState<{ x: number, y: number } | null>(null);
 
     // Draw all annotations
@@ -71,6 +75,13 @@ const Canvas: React.FC<CanvasProps> = (props) => {
                 ctx.fillStyle = selected ? `rgba(0, 125, 180, 0.25)` : `rgba(255, 0, 0, 0.25)`;
                 ctx.fillRect(x, y, w, h);
                 ctx.restore();
+
+                const fontSize = Math.max(40, 10 / viewport?.scale || 1);
+                const padding = Math.max(4, fontSize * 0.2); // or Math.max(4, fontSize * 0.2)
+                ctx.font = `${fontSize}px Arial`;
+                ctx.textBaseline = 'top';
+                ctx.fillStyle = selected ? '#007DB4' : '#B41414';
+                ctx.fillText(annot.name, x + padding, y + padding);
             }
         });
     };
@@ -88,6 +99,9 @@ const Canvas: React.FC<CanvasProps> = (props) => {
             context.fillStyle = backgroundColor || '#FFFFFF';
             context.fillRect(0, 0, context.canvas.width, context.canvas.height);
 
+            context.setTransform(1, 0, 0, 1, 0, 0); // Reset any existing transform
+            context.scale(devicePixelRatio, devicePixelRatio); // Scale for high-DPI
+
             // Apply viewport transformations
             context.scale(viewport.scale, viewport.scale);
             context.translate(viewport.x, viewport.y);
@@ -96,14 +110,16 @@ const Canvas: React.FC<CanvasProps> = (props) => {
 
             if (mousePos) {
                 context.save();
-                context.setTransform(1, 0, 0, 1, 0, 0); // Reset transform to draw crosshair in screen coords
+                context.setTransform(1, 0, 0, 1, 0, 0);
                 context.strokeStyle = 'rgba(0,0,0,0.5)';
                 context.lineWidth = 1;
                 context.beginPath();
-                context.moveTo(mousePos.x, 0);
-                context.lineTo(mousePos.x, canvas.height);
-                context.moveTo(0, mousePos.y);
-                context.lineTo(canvas.width, mousePos.y);
+                const mx = mousePos.x * devicePixelRatio;
+                const my = mousePos.y * devicePixelRatio;
+                context.moveTo(mx, 0);
+                context.lineTo(mx, canvas.height);
+                context.moveTo(0, my);
+                context.lineTo(canvas.width, my);
                 context.stroke();
                 context.restore();
             }
@@ -121,8 +137,13 @@ const Canvas: React.FC<CanvasProps> = (props) => {
         <canvas
             ref={canvasRef}
             tabIndex={0}
-            width={canvasSize.x}
-            height={canvasSize.y}
+            width={canvasWidth}
+            height={canvasHeight}
+            style={{
+                width: `${canvasSize.x}px`,
+                height: `${canvasSize.y}px`,
+                display: 'block'
+            }}
             onMouseDown={(e) => {
                 if (!canvasRef.current) {
                     return;

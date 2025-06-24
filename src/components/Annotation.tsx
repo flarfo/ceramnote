@@ -6,13 +6,15 @@ import { type InspectorProps } from '@components/Inspector';
 // showing the bounds for a specific annotation from which to extract data on export.
 export class Annotation {
     type: string;
+    name: string;
     color: string;
     id: string;
     bounds: {x: number, y: number}[];
     associations: string[] = [];
     inspectorArgs: InspectorProps = {};
-    constructor(type: string, color: string, bounds: {x: number, y: number}[], associations = []) {
+    constructor(type: string, color: string, bounds: {x: number, y: number}[], associations = [], name = 'test') {
         this.type = type;
+        this.name = name;
         this.color = color;
         // Circular doubly linked list of Handles (generally defining a Polygon)
         this.bounds = bounds; // e.g., [{x, y}, ...]
