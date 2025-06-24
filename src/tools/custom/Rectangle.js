@@ -48,6 +48,7 @@ class RectangleTool extends ToolBase {
             }
 
             this.startPoint = null;
+            this.curAnnotation = null;
         }
     }
 
@@ -74,7 +75,11 @@ class RectangleTool extends ToolBase {
 
     onMouseLeave(event) {
         this.startPoint = null;
-        this.curAnnotation = null;
+
+        if (this.curAnnotation != null) {
+            this.toolSystem.removeAnnotation(this.curAnnotation);
+            this.curAnnotation = null;
+        }
     }
 }
 
