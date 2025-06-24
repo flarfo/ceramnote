@@ -56,6 +56,8 @@ const Canvas: React.FC<CanvasProps> = (props) => {
         const annots = (toolSystem?.annotations as any)?.[currentImageId] || [];
         annots.forEach((annot: any) => {
             if (annot.type === 'rectangle' && annot.bounds && annot.bounds.length === 2) {
+                const selected = toolSystem?.selectedAnnotationIDs.includes(annot.id);
+
                 const [start, end] = annot.bounds;
                 const x = Math.min(start.x, end.x);
                 const y = Math.min(start.y, end.y);
@@ -65,7 +67,7 @@ const Canvas: React.FC<CanvasProps> = (props) => {
                 ctx.strokeStyle = annot.color || '#FF0000';
                 ctx.lineWidth = 1 / (viewport?.scale || 1);
                 ctx.strokeRect(x, y, w, h);
-                ctx.fillStyle = `rgba(255, 0, 0, 0.25)`;
+                ctx.fillStyle = selected ? `rgba(0, 125, 180, 0.25)` : `rgba(255, 0, 0, 0.25)`;
                 ctx.fillRect(x, y, w, h);
                 ctx.restore();
             }

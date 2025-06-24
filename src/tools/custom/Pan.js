@@ -1,7 +1,7 @@
 import { ScrollArea } from 'radix-ui';
 import { ToolBase } from '../Tool';
 import { HandIcon } from '@radix-ui/react-icons';
-import { worldToScreen } from '@tools/helpers';
+import { screenToWorld } from '@tools/helpers';
 
 class PanTool extends ToolBase {
     constructor(toolSystem) {
@@ -45,13 +45,16 @@ class PanTool extends ToolBase {
         const { x, y, scale } = this.toolSystem.viewport;
         const newScale = Math.max(minScale, Math.min(maxScale, deltaY < 0 ? scale * ZOOM_SENSITIVITY : scale / ZOOM_SENSITIVITY));
 
+        const mouseWorld = screenToWorld(position, this.toolSystem.viewport, canvasRect);
+
         const px = position.x - canvasRect.left;
         const py = position.y - canvasRect.top;
 
-        const newX = x + px * (1 / newScale - 1 / scale);
-        const newY = y + py * (1 / newScale - 1 / scale);
+        const newX = (px / newScale) - mouseWorld.x;
+        const newY = (py / newScale) - mouseWorld.y;
 
         this.toolSystem.setViewport((prev) => ({
+            ...prev,
             x: newX,
             y: newY,
             scale: newScale,
