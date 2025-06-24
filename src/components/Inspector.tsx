@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import ToolSystem from '../tools/ToolSystem';
 
 export interface InspectorProps {
-    bounds: {x: number, y: number}[]
+    bounds: { x: number, y: number }[]
 };
 
 export const Inspector = ({
@@ -23,11 +23,12 @@ export const Inspector = ({
             {selectedAnnotationIDs.length == 1 ? (
                 <>
                     {/** TODO: update so any selectable object has inspector props */}
-                    {/** TODO: update so annotations are indexed via id key */}
-                    {toolSystem.annotations[toolSystem.currentImageId][0] != null && (
+                    {/** TODO: update so it accurately displays object inspector props for multi-select */}
+                    {/** TODO: add handling and styling for different inpsector types [array, dict, field, etc.] */}
+                    {toolSystem.annotations[toolSystem.currentImageId][toolSystem.selectedAnnotationIDs[0]] != null && (
                         <>
-                            {Object.entries<any>(toolSystem.annotations[toolSystem.currentImageId][0].inspectorArgs).map(([key, value]) => {
-                                return <span>{key}: {value.toString()}</span>
+                            {Object.entries<any>(toolSystem.annotations[toolSystem.currentImageId][toolSystem.selectedAnnotationIDs[0]].inspectorArgs).map(([key, value]) => {
+                                return <div key={key}>{key}: {String(value)}</div>
                             })}
                         </>
                     )}
