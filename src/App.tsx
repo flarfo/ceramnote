@@ -35,8 +35,23 @@ function App() {
 
 	// Set the current image in toolSystem when loaded
 	useEffect(() => {
-		if (isImageLoaded && toolSystem) {
+		if (image && toolSystem) {
 			toolSystem.setCurrentImage(currentImageId);
+
+			const canvasWidth = window.innerWidth;
+			const canvasHeight = window.innerHeight;
+			
+			// Adjust initial viewport so that full image fits (centered) in screen
+			const aspectRatio = canvasWidth / canvasHeight;
+			const scale = (image.height > image.width) ? (window.innerHeight / image.height / aspectRatio) : (window.innerWidth / image.width / aspectRatio);
+			
+			const initialViewport = {
+				x: ((canvasWidth / scale) - image.width) * 0.5,
+				y: ((canvasHeight / scale) - image.height) * 0.5,
+				scale
+			};
+			
+			setViewport(initialViewport);
 		}
 	}, [isImageLoaded, toolSystem]);
 

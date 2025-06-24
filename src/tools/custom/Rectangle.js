@@ -2,7 +2,7 @@
 import { ToolBase } from '../Tool';
 import { Annotation } from '@components/Annotation';
 import { SquareIcon } from '@radix-ui/react-icons';
-import { toCanvasCoords } from '@tools/helpers';
+import { screenToWorld } from '@tools/helpers';
 
 class RectangleTool extends ToolBase {
     constructor(toolSystem) {
@@ -31,15 +31,15 @@ class RectangleTool extends ToolBase {
     // LMB
     onMB0(position, canvasRect) {
         if (!this.startPoint) {
-            console.log(canvasRect);
-            this.startPoint = toCanvasCoords(position, this.toolSystem.viewport, canvasRect);
+            this.startPoint = screenToWorld(position, this.toolSystem.viewport, canvasRect);
         } 
         else {
             // Second click: create rectangle annotation
             const bounds = [
                 this.startPoint,
-                toCanvasCoords(position, this.toolSystem.viewport, canvasRect)
+                screenToWorld(position, this.toolSystem.viewport, canvasRect)
             ];
+
             const annotation = new Annotation("rectangle", "#FF0000", bounds);
             this.toolSystem.addAnnotation(annotation);
             this.startPoint = null;
@@ -48,16 +48,18 @@ class RectangleTool extends ToolBase {
 
     // MMB
     onMB1(position, canvasRect) {
-        console.log('MB1');
     }
 
     // RMB
     onMB2(position, canvasRect) {
-        console.log('MB2');
     }
 
     onMouseMove(event, canvasRect) {
         // Could be used for live preview (not implemented here)
+    }
+
+    onMouseLeave(event) {
+        this.startPoint = null;
     }
 }
 

@@ -6,6 +6,7 @@ import { Annotation } from '@components/Annotation';
 import AnnotationHandle from '@components/AnnotationHandle';
 import RectangleTool from '@tools/custom/Rectangle';
 import PanTool from '@tools/custom/Pan';
+import { TriangleRightIcon } from '@radix-ui/react-icons';
 import React, { type SetStateAction } from 'react';
 
 export class ToolSystem {
@@ -17,7 +18,7 @@ export class ToolSystem {
     keybindMap: { [key: string]: string } = {};
     toolConfig: { [key: string]: any } = {};
     currentImageId: string | null = null;
-    viewport: {x: number, y: number, scale: number};
+    viewport: { x: number, y: number, scale: number };
     setViewport: React.Dispatch<React.SetStateAction<{ x: number, y: number, scale: number }>>;
 
     constructor(setViewport: React.Dispatch<React.SetStateAction<{ x: number, y: number, scale: number }>>) {
@@ -27,7 +28,7 @@ export class ToolSystem {
             new PanTool(this),
         ];
         this.setViewport = setViewport;
-        this.viewport = {x: 0, y: 0, scale: 1};
+        this.viewport = { x: 0, y: 0, scale: 1 };
         this.keybindMap = {}; // key: keybind, value: toolName
         this.toolConfig = {}; // Set config via useEffect onUpload?
     }
@@ -82,6 +83,10 @@ export class ToolSystem {
         if (this.currentTool) this.currentTool.onMouseMove(position, canvasRect);
     }
 
+    handleScroll(deltaY: number, position: {x: number, y: number}, canvasRect: DOMRect) {
+        if (this.currentTool) this.currentTool.onScroll(deltaY, position, canvasRect);
+    }
+
     handleMouseLeave(event: React.MouseEvent<HTMLCanvasElement>) {
         if (this.currentTool) this.currentTool.onMouseLeave(event);
     }
@@ -96,22 +101,43 @@ const ToolButton = ({ tool, selected, onClick }: { tool: ToolBase, selected: boo
     return (
         <button
             style={{
-                border: selected ? '2px solid blue' : '1px solid #ccc',
-                background: selected ? '#eef' : '#fff',
-                margin: 4,
-                padding: 8,
+                background: selected ? 'var(--color-dark)' : 'var(--color-medium)',
+                margin: 2,
+                padding: 6,
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
             }}
             title={tool.name}
             onClick={onClick}
         >
-            <Icon width={24} height={24} style={{ color: `${selected ? '#FF0000' : '#000000'}` }} />
+            <Icon width={24} height={24} className='text-light' />
+            {selected && (
+                <span
+                    style={{
+                        position: 'absolute',
+                        right: -2,
+                        bottom: -2,
+                        color: 'var(--color-light)',
+                        pointerEvents: 'none',
+                        userSelect: 'none',
+                        transform: 'rotate(45deg)', // <-- Add this line
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                >
+                    <TriangleRightIcon />
+                </span>
+            )}
         </button>
     );
 };
 
 export const Toolbar = ({ toolSystem, onToolSelect }: { toolSystem: ToolSystem, onToolSelect: (tool: ToolBase) => void }) => {
     return (
-        <div style={{ display: 'flex', flexDirection: 'row' }}>
+        <div className='flex flex-row flex-wrap'>
             {toolSystem.tools.map((tool) => (
                 <ToolButton
                     key={tool.name}

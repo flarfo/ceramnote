@@ -70,7 +70,6 @@
 .MenubarItem[data-state="open"],
 .MenubarSubTrigger[data-state="open"] {
 	background-color: var(--color-dark);
-	color: var(--color-dark);
 }
 
 .MenubarItem[data-highlighted],
