@@ -2,14 +2,16 @@ import { useState, useEffect, useRef } from 'react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import Canvas from '@components/Canvas';
 import ToolSystem from '@tools/ToolSystem';
-import { Toolbar } from './tools/ToolSystem';
-import type { ToolBase } from './tools/Tool';
-import Filebar from './components/Filebar';
+import { Toolbar } from '@tools/ToolSystem';
+import { Inspector } from '@components/Inspector'
+import type { ToolBase } from '@tools/Tool';
+import Filebar from '@components/Filebar';
 
 function App() {
 	const [image, setImage] = useState<HTMLImageElement | null>(null);
 	const [isImageLoaded, setIsImageLoaded] = useState(false);
 	const [panelSize, setPanelSize] = useState(80);
+	const [selectedAnnotationIDs, setSelectedAnnotationIDs] = useState<string[]>([]);
 
 	const [viewport, setViewport] = useState({ x: 0, y: 0, scale: 1 });
 	const toolSystemRef = useRef<ToolSystem | null>(null);
@@ -20,7 +22,7 @@ function App() {
 	// Initialize ToolSystem after setViewport is available
 	useEffect(() => {
 		if (!toolSystemRef.current) {
-			toolSystemRef.current = new ToolSystem(setViewport);
+			toolSystemRef.current = new ToolSystem(setViewport, setSelectedAnnotationIDs);
 			setCurrentTool(toolSystemRef.current.currentTool);
 		}
 	}, [setViewport]);
@@ -86,11 +88,18 @@ function App() {
 			<PanelGroup direction="horizontal" style={{ height: '100vh' }}>
 				<Panel defaultSize={15} minSize={10} className='bg-(--color-medium)'>
 					{toolSystem && (
-						<Toolbar
-							toolSystem={toolSystem}
-							onToolSelect={handleToolSelect}
-						/>
+						<>
+							<Toolbar
+								toolSystem={toolSystem}
+								onToolSelect={handleToolSelect}
+							/>
+							<Inspector 
+								toolSystem={toolSystem}
+								selectedAnnotationIDs={selectedAnnotationIDs}
+							/>
+						</>
 					)}
+					
 				</Panel>
 				<PanelResizeHandle style={{ width: '4px', background: 'var(--color-light)' }} />
 				<Panel defaultSize={70} minSize={25}

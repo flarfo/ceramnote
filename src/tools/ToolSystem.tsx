@@ -6,28 +6,32 @@ import { Annotation } from '@components/Annotation';
 import AnnotationHandle from '@components/AnnotationHandle';
 import RectangleTool from '@tools/custom/Rectangle';
 import PanTool from '@tools/custom/Pan';
+import SelectorTool from '@tools/custom/Selector';
 import { TriangleRightIcon } from '@radix-ui/react-icons';
 import React, { type SetStateAction } from 'react';
 
 export class ToolSystem {
     tools: ToolBase[] = [];
     currentTool: ToolBase | null = null;
-    annotations: { [imageId: string]: any[] } = {};
-    selectedAnnotation: Annotation | null = null;
+    annotations: { [imageId: string]: Annotation[] } = {};
+    selectedAnnotationIDs: string[] = [];
     selectedHandle: AnnotationHandle | null = null;
     keybindMap: { [key: string]: string } = {};
     toolConfig: { [key: string]: any } = {};
-    currentImageId: string | null = null;
+    currentImageId: string = '';
     viewport: { x: number, y: number, scale: number };
     setViewport: React.Dispatch<React.SetStateAction<{ x: number, y: number, scale: number }>>;
+    setSelectedAnnotationIDs: React.Dispatch<React.SetStateAction<string[]>>;
 
-    constructor(setViewport: React.Dispatch<React.SetStateAction<{ x: number, y: number, scale: number }>>) {
+    constructor(setViewport, setSelectedAnnotationIDs) {
         // Register tools
         this.tools = [
             new RectangleTool(this),
             new PanTool(this),
+            new SelectorTool(this),
         ];
         this.setViewport = setViewport;
+        this.setSelectedAnnotationIDs = setSelectedAnnotationIDs;
         this.viewport = { x: 0, y: 0, scale: 1 };
         this.keybindMap = {}; // key: keybind, value: toolName
         this.toolConfig = {}; // Set config via useEffect onUpload?
@@ -44,11 +48,11 @@ export class ToolSystem {
             this.annotations[this.currentImageId] = [];
         }
         this.annotations[this.currentImageId].push(annotation);
-        this.setViewport((prev) => (prev));
     }
 
-    selectAnnotation(annotation: Annotation) {
-        this.selectedAnnotation = annotation;
+    selectAnnotations(annotationIDs: Annotation[]) {
+        this.selectedAnnotationIDs = annotationIDs;
+        this.setSelectedAnnotationIDs(annotationIDs);
     }
 
     setCurrentImage(imageId: string) {
@@ -56,7 +60,8 @@ export class ToolSystem {
         if (!this.annotations[imageId]) {
             this.annotations[imageId] = [];
         }
-        this.selectedAnnotation = null;
+
+        this.selectedAnnotationIDs = [];
         this.selectedHandle = null;
     }
 
@@ -96,7 +101,7 @@ export class ToolSystem {
     }
 }
 
-const ToolButton = ({ tool, selected, onClick }: { tool: ToolBase, selected: boolean, onClick: React.MouseEventHandler }) => {
+export const ToolButton = ({ tool, selected, onClick }: { tool: ToolBase, selected: boolean, onClick: React.MouseEventHandler }) => {
     const Icon = tool.icon;
     return (
         <button

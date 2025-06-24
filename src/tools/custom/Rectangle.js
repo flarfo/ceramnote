@@ -40,7 +40,7 @@ class RectangleTool extends ToolBase {
                 screenToWorld(position, this.toolSystem.viewport, canvasRect)
             ];
 
-            const annotation = new Annotation("rectangle", "#FF0000", bounds);
+            const annotation = new Annotation("rectangle", 'rgba(255, 0, 0, 0.25)', bounds);
             this.toolSystem.addAnnotation(annotation);
             this.startPoint = null;
         }

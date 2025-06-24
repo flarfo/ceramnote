@@ -1,5 +1,6 @@
 import React from 'react';
 import AnnotationHandle from './AnnotationHandle';
+import { type InspectorProps } from '@components/Inspector';
 
 // Defines the base class for all annotation objects on the Canvas. This is rendered as an overlay on the image,
 // showing the bounds for a specific annotation from which to extract data on export.
@@ -7,16 +8,18 @@ export class Annotation {
     type: string;
     color: string;
     id: string;
-    bounds: AnnotationHandle[] = [];
+    bounds: {x: number, y: number}[];
     associations: string[] = [];
-    constructor(type, color, bounds = [], associations = []) {
-        this.type = type; // e.g., "rectangle"
+    inspectorArgs: InspectorProps = {};
+    constructor(type: string, color: string, bounds: {x: number, y: number}[], associations = []) {
+        this.type = type;
         this.color = color;
-
-        // Circular doubly linked list of Handles (defining a Polygon)
+        // Circular doubly linked list of Handles (generally defining a Polygon)
         this.bounds = bounds; // e.g., [{x, y}, ...]
         this.associations = associations; // array of Annotation ids or refs
         this.id = Annotation.generateId();
+
+        this.inspectorArgs['position'] = bounds;
     };
 
     static generateId() {
@@ -52,11 +55,3 @@ export class Annotation {
         };
     }
 };
-
-const AnnotationBounds = (annotation: Annotation) => {
-    return (
-        <></>
-    );
-};
-
-export default AnnotationBounds;
