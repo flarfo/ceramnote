@@ -47,7 +47,7 @@ export class Annotation {
     //       onHandleClicked => set "currentHandle", call "currentTool.onHandleClicked"
 
     // Save/export logic placeholder
-    save() {
+    save(blob: Blob) {
         return {
             id: this.id,
             type: this.type,

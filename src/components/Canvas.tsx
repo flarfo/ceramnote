@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState } from 'react';
 import type ToolSystem from '../tools/ToolSystem';
-import type { Annotation } from './Annotation';
+import { Annotation } from './Annotation';
+import JSZip from 'jszip';
 
 interface CanvasProps {
     image: HTMLImageElement;
@@ -24,6 +25,70 @@ const Canvas: React.FC<CanvasProps> = (props) => {
     const canvasHeight = canvasSize.y * devicePixelRatio;
 
     const [mousePos, setMousePos] = useState<{ x: number, y: number } | null>(null);
+
+    const save = async () => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const context = canvas.getContext('2d');
+        if (!context) return;
+
+        const zip = new JSZip();
+        const imagesFolder = zip.folder('images');
+        const annotationsData: { annotation: Annotation; imageUrl: string }[] = [];
+
+        const annots = Object.values(toolSystem?.annotations?.[currentImageId] || []);
+        for (const annotation of annots) {
+            // TODO: Move save function to the object itself
+            if (annotation.bounds && annotation.bounds.length === 2) {
+                const [start, end] = annotation.bounds;
+
+                // Calculate crop dimensions
+                const x = Math.min(start.x, end.x);
+                const y = Math.min(start.y, end.y);
+                const width = Math.abs(end.x - start.x);
+                const height = Math.abs(end.y - start.y);
+
+                // Create a temporary canvas for the crop
+                const cropCanvas = document.createElement('canvas');
+                cropCanvas.width = width;
+                cropCanvas.height = height;
+
+                const cropContext = cropCanvas.getContext('2d');
+                if (!cropContext) return;
+
+                // Draw the cropped image onto temp canvas
+                cropContext.drawImage(image, x, y, width, height, 0, 0, width, height);
+
+                // Get cropped image URL
+                // NOTE: blob MIME type MUST match original image MIME type, or size is MASSIVELY inflated (~5x)
+                // TODO: track MIME type of original image so multiple filetypes are supported
+                const blob = await new Promise<Blob | null>((resolve) => cropCanvas.toBlob(resolve, 'image/jpeg', 0.95));
+                if (blob) {
+                    const fileName = `${annotation.id}.jpg`;
+                    imagesFolder?.file(fileName, blob);
+
+                    // Add annotation data to JSON
+                    annotation.save(blob);
+                    annotationsData.push({
+                        annotation: annotation,
+                        imageUrl: `images/${fileName}`,
+                    });
+                }
+            }
+        };
+
+        // Add the JSON file to the ZIP
+        zip.file('annotations.json', JSON.stringify(annotationsData, null, 2));
+
+        // Generate the ZIP file and trigger download
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+        const zipUrl = URL.createObjectURL(zipBlob);
+        const a = document.createElement('a');
+        a.href = zipUrl;
+        a.download = 'annotations.zip';
+        a.click();
+        URL.revokeObjectURL(zipUrl);
+    };
 
     // Draw all annotations
     const draw = (ctx: CanvasRenderingContext2D) => {
@@ -77,7 +142,7 @@ const Canvas: React.FC<CanvasProps> = (props) => {
                 ctx.restore();
 
                 const fontSize = Math.max(40, 10 / viewport?.scale || 1);
-                const padding = Math.max(4, fontSize * 0.2); // or Math.max(4, fontSize * 0.2)
+                const padding = Math.max(4, fontSize * 0.2);
                 ctx.font = `${fontSize}px Arial`;
                 ctx.textBaseline = 'top';
                 ctx.fillStyle = selected ? '#007DB4' : '#B41414';
@@ -125,7 +190,6 @@ const Canvas: React.FC<CanvasProps> = (props) => {
             }
 
             context.restore();
-
         };
 
         render();
@@ -187,6 +251,10 @@ const Canvas: React.FC<CanvasProps> = (props) => {
                 toolSystem.handleKeyDown(e);
             }}
             onKeyUp={(e) => {
+                if (e.key === ' ') {
+                    save();
+                }
+
                 toolSystem.handleKeyDown(e);
             }}
             onMouseLeave={(e) => {
