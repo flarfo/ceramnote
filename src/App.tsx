@@ -9,6 +9,7 @@ import Filebar from '@components/Filebar';
 
 function App() {
 	const [image, setImage] = useState<HTMLImageElement | null>(null);
+	const [imageFiles, setImageFiles] = useState<FileList | null>(null);
 	const [isImageLoaded, setIsImageLoaded] = useState(false);
 	const [panelSize, setPanelSize] = useState(80);
 	const [selectedAnnotationIDs, setSelectedAnnotationIDs] = useState<string[]>([]);
@@ -37,6 +38,29 @@ function App() {
 
 	// Set the current image in toolSystem when loaded
 	useEffect(() => {
+		console.log('Called');
+		if (imageFiles === null) {
+			return;
+		}
+
+		const img = new Image();
+		img.onload = () => {
+			setImage(img);
+			setIsImageLoaded(true);
+		};
+		img.onerror = () => {
+			console.error("Failed to load image at /src/assets/r2.JPG");
+		};
+
+		img.src = URL.createObjectURL(imageFiles[0])
+
+		return () => {
+			img.onload = null;
+			img.onerror = null;
+		};
+	}, [imageFiles]);
+
+	useEffect(() => {
 		if (image && toolSystem) {
 			toolSystem.setCurrentImage(currentImageId);
 
@@ -57,24 +81,6 @@ function App() {
 		}
 	}, [isImageLoaded, toolSystem]);
 
-	useEffect(() => {
-		const img = new Image();
-		img.onload = () => {
-			setImage(img);
-			setIsImageLoaded(true);
-		};
-		img.onerror = () => {
-			console.error("Failed to load image at /src/assets/r2.JPG");
-		};
-
-		img.src = '/src/assets/r2.JPG';
-
-		return () => {
-			img.onload = null;
-			img.onerror = null;
-		};
-	}, []);
-
 	const handleToolSelect = (tool: ToolBase) => {
 		if (toolSystem) {
 			toolSystem.setCurrentTool(tool);
@@ -84,7 +90,7 @@ function App() {
 
 	return (
 		<div className='flex-col flex'>
-			<Filebar />
+			<Filebar setImageFiles={setImageFiles} />
 			<PanelGroup direction="horizontal" style={{ height: '100vh' }}>
 				<Panel defaultSize={15} minSize={10} className='bg-(--color-medium)'>
 					{toolSystem && (
