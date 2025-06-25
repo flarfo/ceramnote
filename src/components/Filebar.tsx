@@ -1,53 +1,67 @@
-import * as React from "react";
-import { Menubar } from "radix-ui";
+import * as React from 'react';
+import { Menubar } from 'radix-ui';
 import {
 	CheckIcon,
 	ChevronRightIcon,
 	DotFilledIcon,
-} from "@radix-ui/react-icons";
-import "./styles.css";
+} from '@radix-ui/react-icons';
+import './styles.css';
 
-const RADIO_ITEMS = ["Classes", "Keybinds", "Defaults"];
-const CHECK_ITEMS = ["Always Show Bookmarks Bar", "Always Show Full URLs"];
+const RADIO_ITEMS = ['Classes', 'Keybinds', 'Defaults'];
+const CHECK_ITEMS = ['Always Show Bookmarks Bar', 'Always Show Full URLs'];
 
-const Filebar = () => {
+interface FilebarProps {
+	setImageFiles: React.Dispatch<React.SetStateAction<FileList | null>>;
+}
+
+const Filebar: React.FC<FilebarProps> = (props) => {
+	const { setImageFiles } = props;
+
 	const [checkedSelection, setCheckedSelection] = React.useState([
 		CHECK_ITEMS[1],
 	]);
 	const [radioSelection, setRadioSelection] = React.useState(RADIO_ITEMS[2]);
 
+
 	return (
-		<Menubar.Root className="MenubarRoot">
+		<Menubar.Root className='MenubarRoot'>
 			<Menubar.Menu>
-				<Menubar.Trigger className="MenubarTrigger">File</Menubar.Trigger>
+				<Menubar.Trigger className='MenubarTrigger'>File</Menubar.Trigger>
 				<Menubar.Portal>
 					<Menubar.Content
-						className="MenubarContent"
-						align="start"
+						className='MenubarContent'
+						align='start'
 						sideOffset={5}
 						alignOffset={-3}
 					>
-						<Menubar.Item className="MenubarItem">
-							Open <div className="RightSlot">CTRL + O</div>
+						<Menubar.Item className='MenubarItem'
+							onClick={() => {
+								const fileInput = document.getElementById("fileInput") as HTMLInputElement;
+								if (fileInput) {
+									fileInput.click(); // Programmatically trigger the file input
+								}
+							}}
+						>
+							Open <div className='RightSlot'>CTRL + O</div>
 						</Menubar.Item>
-						<Menubar.Separator className="MenubarSeparator" />
+						<Menubar.Separator className='MenubarSeparator' />
 						<Menubar.Sub>
-							<Menubar.SubTrigger className="MenubarSubTrigger">
+							<Menubar.SubTrigger className='MenubarSubTrigger'>
 								Export
-								<div className="RightSlot">
+								<div className='RightSlot'>
 									<ChevronRightIcon />
 								</div>
 							</Menubar.SubTrigger>
 							<Menubar.Portal>
 								<Menubar.SubContent
-									className="MenubarSubContent"
+									className='MenubarSubContent'
 									alignOffset={-5}
 								>
-									<Menubar.Item className="MenubarItem">
-										Export All <div className="RightSlot">CTRL + Shift + E</div>
+									<Menubar.Item className='MenubarItem'>
+										Export All <div className='RightSlot'>CTRL + Shift + E</div>
 									</Menubar.Item>
-									<Menubar.Item className="MenubarItem">
-										Export Current <div className="RightSlot">CTRL + Shift + I</div>
+									<Menubar.Item className='MenubarItem'>
+										Export Current <div className='RightSlot'>CTRL + Shift + I</div>
 									</Menubar.Item>
 								</Menubar.SubContent>
 							</Menubar.Portal>
@@ -55,42 +69,41 @@ const Filebar = () => {
 					</Menubar.Content>
 				</Menubar.Portal>
 			</Menubar.Menu>
-
 			<Menubar.Menu>
-				<Menubar.Trigger className="MenubarTrigger">Edit</Menubar.Trigger>
+				<Menubar.Trigger className='MenubarTrigger'>Edit</Menubar.Trigger>
 				<Menubar.Portal>
 					<Menubar.Content
-						className="MenubarContent"
-						align="start"
+						className='MenubarContent'
+						align='start'
 						sideOffset={5}
 						alignOffset={-3}
 					>
-						<Menubar.Item className="MenubarItem">
-							Undo <div className="RightSlot">CTRL + Z</div>
+						<Menubar.Item className='MenubarItem'>
+							Undo <div className='RightSlot'>CTRL + Z</div>
 						</Menubar.Item>
-						<Menubar.Item className="MenubarItem">
-							Redo <div className="RightSlot">CTRL + Y</div>
+						<Menubar.Item className='MenubarItem'>
+							Redo <div className='RightSlot'>CTRL + Y</div>
 						</Menubar.Item>
-						<Menubar.Separator className="MenubarSeparator" />
-						<Menubar.Item className="MenubarItem">Cut</Menubar.Item>
-						<Menubar.Item className="MenubarItem">Copy</Menubar.Item>
-						<Menubar.Item className="MenubarItem">Paste</Menubar.Item>
+						<Menubar.Separator className='MenubarSeparator' />
+						<Menubar.Item className='MenubarItem'>Cut</Menubar.Item>
+						<Menubar.Item className='MenubarItem'>Copy</Menubar.Item>
+						<Menubar.Item className='MenubarItem'>Paste</Menubar.Item>
 					</Menubar.Content>
 				</Menubar.Portal>
 			</Menubar.Menu>
 
 			<Menubar.Menu>
-				<Menubar.Trigger className="MenubarTrigger">View</Menubar.Trigger>
+				<Menubar.Trigger className='MenubarTrigger'>View</Menubar.Trigger>
 				<Menubar.Portal>
 					<Menubar.Content
-						className="MenubarContent"
-						align="start"
+						className='MenubarContent'
+						align='start'
 						sideOffset={5}
 						alignOffset={-14}
 					>
 						{CHECK_ITEMS.map((item) => (
 							<Menubar.CheckboxItem
-								className="MenubarCheckboxItem inset"
+								className='MenubarCheckboxItem inset'
 								key={item}
 								checked={checkedSelection.includes(item)}
 								onCheckedChange={() =>
@@ -101,25 +114,25 @@ const Filebar = () => {
 									)
 								}
 							>
-								<Menubar.ItemIndicator className="MenubarItemIndicator">
+								<Menubar.ItemIndicator className='MenubarItemIndicator'>
 									<CheckIcon />
 								</Menubar.ItemIndicator>
 								{item}
 							</Menubar.CheckboxItem>
 						))}
-						<Menubar.Separator className="MenubarSeparator" />
-						<Menubar.Item className="MenubarItem inset">
-							Reload <div className="RightSlot">⌘ R</div>
+						<Menubar.Separator className='MenubarSeparator' />
+						<Menubar.Item className='MenubarItem inset'>
+							Reload <div className='RightSlot'>⌘ R</div>
 						</Menubar.Item>
-						<Menubar.Item className="MenubarItem inset" disabled>
-							Force Reload <div className="RightSlot">⇧ ⌘ R</div>
+						<Menubar.Item className='MenubarItem inset' disabled>
+							Force Reload <div className='RightSlot'>⇧ ⌘ R</div>
 						</Menubar.Item>
-						<Menubar.Separator className="MenubarSeparator" />
-						<Menubar.Item className="MenubarItem inset">
+						<Menubar.Separator className='MenubarSeparator' />
+						<Menubar.Item className='MenubarItem inset'>
 							Toggle Fullscreen
 						</Menubar.Item>
-						<Menubar.Separator className="MenubarSeparator" />
-						<Menubar.Item className="MenubarItem inset">
+						<Menubar.Separator className='MenubarSeparator' />
+						<Menubar.Item className='MenubarItem inset'>
 							Hide Sidebar
 						</Menubar.Item>
 					</Menubar.Content>
@@ -127,11 +140,11 @@ const Filebar = () => {
 			</Menubar.Menu>
 
 			<Menubar.Menu>
-				<Menubar.Trigger className="MenubarTrigger">Config</Menubar.Trigger>
+				<Menubar.Trigger className='MenubarTrigger'>Config</Menubar.Trigger>
 				<Menubar.Portal>
 					<Menubar.Content
-						className="MenubarContent"
-						align="start"
+						className='MenubarContent'
+						align='start'
 						sideOffset={5}
 						alignOffset={-14}
 					>
@@ -141,25 +154,38 @@ const Filebar = () => {
 						>
 							{RADIO_ITEMS.map((item) => (
 								<Menubar.RadioItem
-									className="MenubarRadioItem inset"
+									className='MenubarRadioItem inset'
 									key={item}
 									value={item}
 								>
-									<Menubar.ItemIndicator className="MenubarItemIndicator">
+									<Menubar.ItemIndicator className='MenubarItemIndicator'>
 										<DotFilledIcon />
 									</Menubar.ItemIndicator>
 									{item}
 								</Menubar.RadioItem>
 							))}
-							<Menubar.Separator className="MenubarSeparator" />
-							<Menubar.Item className="MenubarItem inset">Edit…</Menubar.Item>
-							<Menubar.Separator className="MenubarSeparator" />
-							<Menubar.Item className="MenubarItem inset">Import</Menubar.Item>
-							<Menubar.Item className="MenubarItem inset">Download</Menubar.Item>
+							<Menubar.Separator className='MenubarSeparator' />
+							<Menubar.Item className='MenubarItem inset'>Edit…</Menubar.Item>
+							<Menubar.Separator className='MenubarSeparator' />
+							<Menubar.Item className='MenubarItem inset'>Import</Menubar.Item>
+							<Menubar.Item className='MenubarItem inset'>Download</Menubar.Item>
 						</Menubar.RadioGroup>
 					</Menubar.Content>
 				</Menubar.Portal>
 			</Menubar.Menu>
+			{/** Keep input outside of the Menubar popovers, since clicking removes it from the DOM :( */}
+			<input
+				id='fileInput'
+				type='file'
+				multiple
+				style={{ display: 'none' }}
+				onChange={(e) => {
+					console.log(e.currentTarget.files);
+					if (e.currentTarget.files) {
+						setImageFiles(e.currentTarget.files);
+					}
+				}}
+			/>
 		</Menubar.Root>
 	);
 };
