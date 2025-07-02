@@ -33,7 +33,13 @@ class RectangleTool extends ToolBase {
     onMB0(position, canvasRect) {
         if (!this.startPoint) {
             this.startPoint = screenToWorld(position, this.toolSystem.viewport, canvasRect)
-            this.curAnnotation = new Annotation("rectangle", 'rgba(255, 0, 0, 0.25)', [this.startPoint, this.startPoint]);
+
+            const name = this.toolSystem.getCurrentAnnotationClass();
+            console.log(name)
+            const color = this.toolSystem.configManager.getClassColor(name);
+
+            this.curAnnotation = new Annotation("rectangle", color, 
+                [this.startPoint, this.startPoint], [], name);
         } 
         else {
             // Second click: create rectangle annotation
