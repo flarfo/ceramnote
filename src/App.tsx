@@ -6,6 +6,7 @@ import { Toolbar } from '@tools/ToolSystem';
 import { Inspector } from '@components/Inspector'
 import type { ToolBase } from '@tools/Tool';
 import Filebar from '@components/Filebar';
+import { ConfigManager, DEFAULT_CONFIG, type AppConfig } from './tools/config_manager';
 
 function App() {
 	const [image, setImage] = useState<HTMLImageElement | null>(null);
@@ -13,17 +14,35 @@ function App() {
 	const [isImageLoaded, setIsImageLoaded] = useState(false);
 	const [panelSize, setPanelSize] = useState(80);
 	const [selectedAnnotationIDs, setSelectedAnnotationIDs] = useState<string[]>([]);
+	const [config, setConfig] = useState<AppConfig>(DEFAULT_CONFIG);
 
 	const [viewport, setViewport] = useState({ x: 0, y: 0, scale: 1 });
 	const toolSystemRef = useRef<ToolSystem | null>(null);
+	const configManagerRef = useRef<ConfigManager | null>(null);
 	const [currentTool, setCurrentTool] = useState<ToolBase | null>(null);
+	const [currentAnnotationClass, setCurrentAnnotationClass] = useState<string>('');
 	const currentImageId = 'default'; // For demo, use a static image id
 
 
-	// Initialize ToolSystem after setViewport is available
+	// Initialize ConfigManager and ToolSystem after setViewport is available
 	useEffect(() => {
+		if (!configManagerRef.current) {
+			configManagerRef.current = new ConfigManager(DEFAULT_CONFIG, setConfig);
+			console.log(DEFAULT_CONFIG)
+			// Try to load saved config from localStorage
+			configManagerRef.current.loadFromStorage();
+			console.log(configManagerRef.current.getConfig());
+		}
+
 		if (!toolSystemRef.current) {
-			toolSystemRef.current = new ToolSystem(setViewport, setSelectedAnnotationIDs);
+			toolSystemRef.current = new ToolSystem(
+				setViewport, 
+				setSelectedAnnotationIDs, 
+				configManagerRef.current,
+				setCurrentTool,
+				setCurrentAnnotationClass
+			);
+
 			setCurrentTool(toolSystemRef.current.currentTool);
 		}
 	}, [setViewport]);
@@ -34,7 +53,15 @@ function App() {
 		}
 	}, [viewport]);
 
+	// Update keybinds when config changes
+	useEffect(() => {
+		if (toolSystemRef.current) {
+			toolSystemRef.current.updateKeybinds();
+		}
+	}, [config]);
+
 	const toolSystem = toolSystemRef.current;
+	const configManager = configManagerRef.current;
 
 	// Set the current image in toolSystem when loaded
 	useEffect(() => {
@@ -84,13 +111,17 @@ function App() {
 	const handleToolSelect = (tool: ToolBase) => {
 		if (toolSystem) {
 			toolSystem.setCurrentTool(tool);
-			setCurrentTool(tool);
 		}
 	};
 
 	return (
 		<div className='flex-col flex'>
-			<Filebar setImageFiles={setImageFiles} />
+			<Filebar 
+				setImageFiles={setImageFiles} 
+				configManager={configManagerRef.current}
+				toolSystem={toolSystemRef.current}
+				currentAnnotationClass={currentAnnotationClass}
+			/>
 			<PanelGroup direction="horizontal" style={{ height: '100vh' }}>
 				<Panel defaultSize={15} minSize={10} className='bg-(--color-medium)'>
 					{toolSystem && (
@@ -126,6 +157,7 @@ function App() {
 							currentImageId={currentImageId}
 							backgroundColor={'#3B3B3B'}
 							toolSystem={toolSystem}
+							configManager={configManager}
 							viewport={viewport}
 						/>
 					</div>
