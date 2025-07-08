@@ -1,21 +1,19 @@
 import React from 'react';
-import AnnotationHandle from './AnnotationHandle';
-import { type InspectorProps } from '@components/Inspector';
+import { AnnotationHandle } from './AnnotationHandle';
+import { type InspectorProps } from './Inspector';
 
 // Defines the base class for all annotation objects on the Canvas. This is rendered as an overlay on the image,
 // showing the bounds for a specific annotation from which to extract data on export.
 export class Annotation {
     type: string;
     name: string;
-    color: string;
     id: string;
     bounds: {x: number, y: number}[];
     associations: string[] = [];
     inspectorArgs: InspectorProps = {};
-    constructor(type: string, color: string, bounds: {x: number, y: number}[], associations = [], name = 'test') {
+    constructor(type: string, bounds: {x: number, y: number}[], associations = [], name = 'test') {
         this.type = type;
         this.name = name;
-        this.color = color;
         // Circular doubly linked list of Handles (generally defining a Polygon)
         this.bounds = bounds; // e.g., [{x, y}, ...]
         this.associations = associations; // array of Annotation ids or refs
@@ -47,7 +45,7 @@ export class Annotation {
     //       onHandleClicked => set "currentHandle", call "currentTool.onHandleClicked"
 
     // Save/export logic placeholder
-    save(blob: Blob) {
+    /*save(blob: Blob) {
         return {
             id: this.id,
             type: this.type,
@@ -55,5 +53,5 @@ export class Annotation {
             bounds: this.bounds,
             associations: this.associations
         };
-    }
+    }*/
 };
