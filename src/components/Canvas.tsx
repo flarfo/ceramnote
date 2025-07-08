@@ -80,7 +80,7 @@ const Canvas: React.FC<CanvasProps> = (props) => {
                     imagesFolder?.file(fileName, blob);
 
                     // Add annotation data to JSON
-                    annotation.save(blob);
+                    // annotation.save(blob);
                     annotationsData.push({
                         annotation: annotation,
                         imageUrl: `images/${fileName}`,
@@ -147,22 +147,26 @@ const Canvas: React.FC<CanvasProps> = (props) => {
                 const h = Math.abs(end.y - start.y);
                 ctx.save();
 
-                const color = hexToRgba(annot.color, 0.4);
-                const inverse = hexToInverseRgba(annot.color, 0.4);
+                const baseColor = configManager.getClassColor(annot.name);
 
-                ctx.strokeStyle = color
+                const color = hexToRgba(baseColor, 0.1);
+                const inverse = hexToInverseRgba(baseColor, 0.1);
+
+                ctx.strokeStyle = selected? inverse : color;
                 ctx.lineWidth = 1 / (viewport?.scale || 1);
                 ctx.strokeRect(x, y, w, h);
                 ctx.fillStyle = selected ? inverse : color;
                 ctx.fillRect(x, y, w, h);
                 ctx.restore();
 
-                const fontSize = Math.max(40, 10 / viewport?.scale || 1);
-                const padding = Math.max(4, fontSize * 0.2);
-                ctx.font = `${fontSize}px Arial`;
-                ctx.textBaseline = 'top';
-                ctx.fillStyle = !selected ? hexToInverseRgba(annot.color, 0.75) : hexToRgba(annot.color, 0.75);
-                ctx.fillText(annot.name, x + padding, y + padding);
+                if (selected) {
+                    const fontSize = Math.max(20, 8 / viewport?.scale || 1);
+                    const padding = Math.max(4, fontSize * 0.2);
+                    ctx.font = `${fontSize}px Arial`;
+                    ctx.textBaseline = 'top';
+                    ctx.fillStyle = selected ? hexToInverseRgba(baseColor, 0.75) : hexToRgba(baseColor, 0.75);
+                    ctx.fillText(annot.name, x + padding, y + padding);
+                }
             }
         });
     };
