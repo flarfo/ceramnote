@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { useRef } from 'react';
 import { Menubar, Dialog } from 'radix-ui';
 import {
 	CheckIcon,
@@ -17,10 +17,22 @@ interface FilebarProps {
 	configManager: ConfigManager | null;
 	toolSystem: ToolSystem | null;
 	currentAnnotationClass: string;
+	availableModels: Record<string, string>;
+	selectedModels: string[];
+	onModelSelect: (modelNames: string[]) => void;
+	onCustomModelUpload: (file: File) => void;
 }
 
-const Filebar: React.FC<FilebarProps> = (props) => {
-	const { setImageFiles, configManager, toolSystem } = props;
+const Filebar: React.FC<FilebarProps> = ({
+	setImageFiles,
+	configManager,
+	toolSystem,
+	currentAnnotationClass,
+	availableModels,
+	selectedModels,
+	onModelSelect,
+	onCustomModelUpload
+}) => {
 
 	const [checkedSelection, setCheckedSelection] = React.useState([
 		CHECK_ITEMS[1],
@@ -28,6 +40,15 @@ const Filebar: React.FC<FilebarProps> = (props) => {
 
 	const [isClassesDialogOpen, setIsClassesDialogOpen] = React.useState(false);
 	const [classItems, setClassItems] = React.useState<Array<{ id: string, name: string, color: string }>>([]);
+
+	const handleModelCheckboxChange = (model: string) => {
+		if (selectedModels.includes(model)) {
+			onModelSelect(selectedModels.filter(m => m !== model));
+		}
+		else {
+			onModelSelect([...selectedModels, model]);
+		}
+	};
 
 	// Update local state when config manager changes
 	React.useEffect(() => {
@@ -110,7 +131,7 @@ const Filebar: React.FC<FilebarProps> = (props) => {
 					>
 						<Menubar.Item className='MenubarItem'
 							onClick={() => {
-								const fileInput = document.getElementById("fileInput") as HTMLInputElement;
+								const fileInput = document.getElementById('imageInput') as HTMLInputElement;
 								if (fileInput) {
 									fileInput.click(); // Programmatically trigger the file input
 								}
@@ -213,6 +234,42 @@ const Filebar: React.FC<FilebarProps> = (props) => {
 					</Menubar.Content>
 				</Menubar.Portal>
 			</Menubar.Menu>
+			<Menubar.Menu>
+				<Menubar.Trigger className='MenubarTrigger'>Preprocess</Menubar.Trigger>
+				<Menubar.Portal>
+					<Menubar.Content
+						className='MenubarContent'
+						align='start'
+						sideOffset={5}
+						alignOffset={-14}
+					>
+						{Object.keys(availableModels).map(model => (
+							<Menubar.CheckboxItem
+								className='MenubarCheckboxItem inset'
+								key={model}
+								checked={selectedModels.includes(model)}
+								onCheckedChange={() => handleModelCheckboxChange(model)}
+							>
+								<Menubar.ItemIndicator className='MenubarItemIndicator'>
+									<CheckIcon />
+								</Menubar.ItemIndicator>
+								{model}
+							</Menubar.CheckboxItem>
+						))}
+						<Menubar.Separator className='MenubarSeparator' />
+						<Menubar.Item className='MenubarItem inset'
+							onClick={() => {
+								const fileInput = document.getElementById('modelInput') as HTMLInputElement;
+								if (fileInput) {
+									fileInput.click(); // Programmatically trigger the file input
+								}
+							}}
+						>
+							Upload Model
+						</Menubar.Item>
+					</Menubar.Content>
+				</Menubar.Portal>
+			</Menubar.Menu>
 			{/** CONFIG */}
 			<Menubar.Menu>
 				<Menubar.Trigger className='MenubarTrigger'>Config</Menubar.Trigger>
@@ -241,11 +298,11 @@ const Filebar: React.FC<FilebarProps> = (props) => {
 									>
 										{classItems.map((item) => (
 											<Menubar.RadioItem
-												className="MenubarRadioItem inset"
+												className='MenubarRadioItem inset'
 												key={item.id}
 												value={item.name}
 											>
-												<Menubar.ItemIndicator className="MenubarItemIndicator">
+												<Menubar.ItemIndicator className='MenubarItemIndicator'>
 													<DotFilledIcon style={{ color: item.color }} />
 												</Menubar.ItemIndicator>
 												{item.name}
@@ -271,31 +328,31 @@ const Filebar: React.FC<FilebarProps> = (props) => {
 			</Menubar.Menu>
 			<Dialog.Root open={isClassesDialogOpen} onOpenChange={setIsClassesDialogOpen}>
 				<Dialog.Portal>
-					<Dialog.Overlay className="DialogOverlay" />
-					<Dialog.Content className="DialogContent">
-						<Dialog.Title className="DialogTitle">Configure Classes</Dialog.Title>
-						<Dialog.Description className="DialogDescription">
+					<Dialog.Overlay className='DialogOverlay' />
+					<Dialog.Content className='DialogContent'>
+						<Dialog.Title className='DialogTitle'>Configure Classes</Dialog.Title>
+						<Dialog.Description className='DialogDescription'>
 							Manage your class names configuration.
 						</Dialog.Description>
-						<div className="ClassesList">
+						<div className='ClassesList'>
 							{classItems.map((item) => (
-								<div key={item.id} className="ClassItem">
+								<div key={item.id} className='ClassItem'>
 									<input
-										type="text"
+										type='text'
 										value={item.name}
 										onChange={(e) => updateClassName(item.id, e.target.value)}
-										className="ClassInput"
-										placeholder="Class name"
+										className='ClassInput'
+										placeholder='Class name'
 									/>
 									<input
-										type="color"
+										type='color'
 										value={item.color}
 										onChange={(e) => updateClassColor(item.id, e.target.value)}
-										className="ColorInput"
+										className='ColorInput'
 									/>
 									<button
 										onClick={() => deleteClass(item.id)}
-										className="DeleteButton"
+										className='DeleteButton'
 									>
 										<Cross2Icon />
 									</button>
@@ -304,21 +361,21 @@ const Filebar: React.FC<FilebarProps> = (props) => {
 						</div>
 						<button
 							onClick={addClass}
-							className="AddButton"
+							className='AddButton'
 						>
 							Add Class
 						</button>
-						<div className="DialogActions">
+						<div className='DialogActions'>
 							<Dialog.Close asChild>
-								<button className="Button green" onClick={handleSaveClasses}>Save</button>
+								<button className='Button green' onClick={handleSaveClasses}>Save</button>
 							</Dialog.Close>
 							<Dialog.Close asChild>
-								<button className="Button gray" onClick={handleCancelClasses}>Cancel</button>
+								<button className='Button gray' onClick={handleCancelClasses}>Cancel</button>
 							</Dialog.Close>
 						</div>
 
 						<Dialog.Close asChild>
-							<button className="IconButton" aria-label="Close">
+							<button className='IconButton' aria-label='Close'>
 								<Cross2Icon />
 							</button>
 						</Dialog.Close>
@@ -327,7 +384,7 @@ const Filebar: React.FC<FilebarProps> = (props) => {
 			</Dialog.Root>
 			{/** Keep input outside of the Menubar popovers, since clicking removes it from the DOM :( */}
 			<input
-				id='fileInput'
+				id='imageInput'
 				type='file'
 				multiple
 				style={{ display: 'none' }}
@@ -335,6 +392,17 @@ const Filebar: React.FC<FilebarProps> = (props) => {
 					console.log(e.currentTarget.files);
 					if (e.currentTarget.files) {
 						setImageFiles(e.currentTarget.files);
+					}
+				}}
+			/>
+			<input
+				id='modelInput'
+				type='file'
+				accept='.onnx'
+				style={{ display: 'none' }}
+				onChange={e => {
+					if (e.target.files && e.target.files[0]) {
+						onCustomModelUpload(e.target.files[0]);
 					}
 				}}
 			/>

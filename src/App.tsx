@@ -10,7 +10,7 @@ import Filebar from './components/Filebar';
 import { ConfigManager, DEFAULT_CONFIG, type AppConfig } from './tools/config_manager';
 import { model_loader } from './onnx/model_loader';
 import { inference_pipeline } from './onnx/inference_pipeline';
-import type { InferenceSession } from 'onnxruntime-web';
+import type { InferenceSession } from 'onnxruntime-web/wasm';
 import { Annotation } from './components/Annotation';
 
 function App() {
@@ -21,7 +21,13 @@ function App() {
 	const [selectedAnnotationIDs, setSelectedAnnotationIDs] = useState<string[]>([]);
 	const [config, setConfig] = useState<AppConfig>(DEFAULT_CONFIG);
 
-	const [models, setModels] = useState<InferenceSession[]>([]);
+	// Warmed-up and ready for use
+	const [loadedModels, setLoadedModels] = useState<Record<string, InferenceSession>>({});
+	// Initial state should be default models (already stored in public directory)
+	const [availableModels, setAvailableModels] = useState<Record<string, string>>(
+		{'tile_detector': '/models/tile_detector.onnx'} 	
+	);
+	const [selectedModels, setSelectedModels] = useState<string[]>([]);
 
 	const [viewport, setViewport] = useState({ x: 0, y: 0, scale: 1 });
 	const toolSystemRef = useRef<ToolSystem | null>(null);
@@ -100,23 +106,68 @@ function App() {
 		};
 	}, [imageFiles]);
 
+	const handleModelSelect = async (models: string[]) => {
+		// Load newly selected models
+		console.log(availableModels);
+		for (let i = 0; i < models.length; i++) {
+			const modelName= models[i];
+			if (!loadedModels[modelName]) {
+				const modelPath = availableModels[modelName];
+
+				console.log(modelPath);
+				const session = (await model_loader('wasm', modelPath, { input_shape: [1, 3, 800, 800] })).yolo_model;
+				setLoadedModels(prev => ({ ...prev, [modelName]: session }));
+			}
+		}
+
+		// Unload deselected models
+		for (const modelName of Object.keys(loadedModels)) {
+			if (!models.includes(modelName)) {
+				// Optionally dispose session if needed
+				setLoadedModels(prev => {
+					const copy = { ...prev };
+					delete copy[modelName];
+
+					return copy;
+				});
+			}
+		}
+
+		setSelectedModels(models);
+	};
+
+	const handleCustomModelUpload = (file: File) => {
+		const customModelName = `Custom: ${file.name}`;
+		
+		setAvailableModels(prev => ({
+			...prev, 
+			[customModelName]: URL.createObjectURL(file) 
+		}));
+
+		// Save file to a blob URL or IndexedDB if needed
+		// NOTE: doesn't properly pass state, since availableModels isn't updated immediately.
+		//		 could re-add, but not dire.
+		// handleModelSelect([...selectedModels, customModelName]);
+	};
+
 	const handle_ImageLoad = async () => {
 		// TODO: preload model on select
 		// TODO: prevent multiple cnn inference passes on single image
-		// TODO: allow multiple models to preprocess image
-		const model = (await model_loader('wasm', '/models/tile_detector.onnx', { input_shape: [1, 3, 800, 800] })).yolo_model;
-		console.log(model);
-		if (!image || !model || !configManager) return;
+		if (!image || !configManager) return;
 
-		const [results, time] = await inference_pipeline(image, { yolo_model: model });
+		for (let i = 0; i < selectedModels.length; i++) {
+			const model = loadedModels[selectedModels[i]];
+			if (!model) continue;
+			const [results, time] = await inference_pipeline(image, { yolo_model: model });
 
-		console.log('Time:', time);
-		console.log(results);
+			console.log('Time:', time);
+			console.log(results);
 
-		for (const result of results) {
-			const [x, y, w, h] = result.bbox;
-			const annotation = new Annotation('rectangle', [{ x, y }, {x: x + w, y: y + h} ], [], 'tile');
-			toolSystem?.addAnnotation(annotation);
+			for (const result of results) {
+				const [x, y, w, h] = result.bbox;
+				const annotation = new Annotation('rectangle', [{ x, y }, { x: x + w, y: y + h }], [], 'tile');
+				toolSystem?.addAnnotation(annotation);
+			}
 		}
 	};
 
@@ -154,6 +205,10 @@ function App() {
 				configManager={configManagerRef.current}
 				toolSystem={toolSystemRef.current}
 				currentAnnotationClass={currentAnnotationClass}
+				availableModels={availableModels}
+				selectedModels={selectedModels}
+				onModelSelect={handleModelSelect}
+				onCustomModelUpload={handleCustomModelUpload}
 			/>
 			<PanelGroup direction="horizontal" style={{ height: '100vh' }}>
 				<Panel defaultSize={15} minSize={10} className='bg-(--color-medium)'>
