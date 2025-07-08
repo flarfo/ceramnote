@@ -25,7 +25,7 @@ function App() {
 	const [loadedModels, setLoadedModels] = useState<Record<string, InferenceSession>>({});
 	// Initial state should be default models (already stored in public directory)
 	const [availableModels, setAvailableModels] = useState<Record<string, string>>(
-		{'tile_detector': '/models/best.onnx'} 	
+		{'tile_detector': '/models/tile_detector.onnx'} 	
 	);
 	const [selectedModels, setSelectedModels] = useState<string[]>([]);
 
@@ -109,7 +109,8 @@ function App() {
 	const handleModelSelect = async (models: string[]) => {
 		// Load newly selected models
 		console.log(availableModels);
-		for (const modelName of models) {
+		for (let i = 0; i < models.length; i++) {
+			const modelName= models[i];
 			if (!loadedModels[modelName]) {
 				const modelPath = availableModels[modelName];
 
@@ -154,8 +155,8 @@ function App() {
 		// TODO: prevent multiple cnn inference passes on single image
 		if (!image || !configManager) return;
 
-		for (const modelName of selectedModels) {
-			const model = loadedModels[modelName];
+		for (let i = 0; i < selectedModels.length; i++) {
+			const model = loadedModels[selectedModels[i]];
 			if (!model) continue;
 			const [results, time] = await inference_pipeline(image, { yolo_model: model });
 
