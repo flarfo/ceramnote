@@ -1,10 +1,9 @@
-import { ToolButton } from '@tools/ToolSystem'
-import { SquareIcon } from '@radix-ui/react-icons';
 import { useEffect } from 'react';
 import ToolSystem from '../tools/ToolSystem';
 
 export interface InspectorProps {
-    bounds: { x: number, y: number }[]
+    bounds?: { x: number; y: number }[];
+    position?: {x: number, y: number}[];
 };
 
 export const Inspector = ({
