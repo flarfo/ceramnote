@@ -1,11 +1,15 @@
 // Rectangle annotation tool
 import { ToolBase } from '../Tool';
-import { Annotation } from '@components/Annotation';
+import { Annotation } from '../../components/Annotation';
 import { SquareIcon } from '@radix-ui/react-icons';
-import { screenToWorld } from '@tools/helpers';
+import { screenToWorld } from '../helpers';
+import type ToolSystem from '../ToolSystem';
 
 class RectangleTool extends ToolBase {
-    constructor(toolSystem) {
+    startPoint: {x: number, y: number} | null;
+    curAnnotation: Annotation | null;
+
+    constructor(toolSystem: ToolSystem) {
         super(toolSystem, "Rectangle", SquareIcon, "R");
         this.startPoint = null;
         this.curAnnotation = null;
@@ -15,7 +19,7 @@ class RectangleTool extends ToolBase {
         this.startPoint = null;
     }
 
-    onMouseDown(button, position, canvasRect) {
+    onMouseDown(button: number, position: {x: number, y: number}, canvasRect: DOMRect) {
         switch (button) {
             case 0:
                 this.onMB0(position, canvasRect);
@@ -30,16 +34,12 @@ class RectangleTool extends ToolBase {
     }
 
     // LMB
-    onMB0(position, canvasRect) {
+    onMB0(position: {x: number, y: number}, canvasRect: DOMRect) {
         if (!this.startPoint) {
             this.startPoint = screenToWorld(position, this.toolSystem.viewport, canvasRect)
 
             const name = this.toolSystem.getCurrentAnnotationClass();
-            console.log(name)
-            const color = this.toolSystem.configManager.getClassColor(name);
-
-            this.curAnnotation = new Annotation("rectangle", color, 
-                [this.startPoint, this.startPoint], [], name);
+            this.curAnnotation = new Annotation("rectangle", [this.startPoint, this.startPoint], [], name);
         } 
         else {
             // Second click: create rectangle annotation
@@ -59,14 +59,14 @@ class RectangleTool extends ToolBase {
     }
 
     // MMB
-    onMB1(position, canvasRect) {
+    onMB1(position: {x: number, y: number}, canvasRect: DOMRect) {
     }
 
     // RMB
-    onMB2(position, canvasRect) {
+    onMB2(position: {x: number, y: number}, canvasRect: DOMRect) {
     }
 
-    onMouseMove(position, canvasRect) {
+    onMouseMove(position: {x: number, y: number}, canvasRect: DOMRect) {
         // Live preview (if start point already set)
         if (this.startPoint) {
             const bounds = [
@@ -74,12 +74,14 @@ class RectangleTool extends ToolBase {
                 screenToWorld(position, this.toolSystem.viewport, canvasRect)
             ];
 
-            this.curAnnotation.bounds = bounds;
-            this.toolSystem.addAnnotation(this.curAnnotation);
+            if (this.curAnnotation) {
+                this.curAnnotation.bounds = bounds;
+                this.toolSystem.addAnnotation(this.curAnnotation);
+            }
         } 
     }
 
-    onMouseLeave(event) {
+    onMouseLeave(event: React.MouseEvent<HTMLCanvasElement>) {
         this.startPoint = null;
 
         if (this.curAnnotation != null) {

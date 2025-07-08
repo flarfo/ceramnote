@@ -21,10 +21,11 @@ export class ToolBase {
 
     // Event hooks (to be overridden by subclasses)
     // TODO: fix params
-    onMouseDown(event: { x: number, y: number }) {}
-    onMouseUp(event: { x: number, y: number }) {}
-    onMouseMove(event: { x: number, y: number }) {}
-    onMouseLeave() {}
-    onKeyDown(event: KeyboardEvent) {}
-    onKeyUp(event: KeyboardEvent) {}
+    onMouseDown(button: number, position: { x: number, y: number }, canvasRect: DOMRect) {}
+    onMouseUp(button: number, position: { x: number, y: number }, canvasRect: DOMRect) {}
+    onMouseMove(position: { x: number, y: number }, canvasRect: DOMRect) {}
+    onMouseLeave(event: React.MouseEvent<HTMLCanvasElement>) {}
+    onKeyDown(event: React.KeyboardEvent<HTMLCanvasElement>) {}
+    onKeyUp(event: React.KeyboardEvent<HTMLCanvasElement>) {}
+    onScroll(deltaY: number, position: {x: number, y: number}, canvasRect: DOMRect) {}
 };

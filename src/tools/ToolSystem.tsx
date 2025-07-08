@@ -1,14 +1,14 @@
 // Global tool manager, this will handle the base logic driving all classes extending Tool (defined in ../tools/custom).
 // Iterate over all tools and create a list from which to render toolbar, identify current event overrides.
 // Store currentTool, handle keybindings, etc.
-import { ToolBase } from '@tools/Tool';
-import { Annotation } from '@components/Annotation';
-import AnnotationHandle from '@components/AnnotationHandle';
-import RectangleTool from '@tools/custom/Rectangle';
-import PanTool from '@tools/custom/Pan';
-import SelectorTool from '@tools/custom/Selector';
+import { ToolBase } from './Tool';
+import { Annotation } from '../components/Annotation';
+import { AnnotationHandle } from '../components/AnnotationHandle';
+import RectangleTool from './custom/RectangleTool';
+import PanTool from './custom/PanTool';
+import SelectorTool from './custom/SelectorTool';
 import { TriangleRightIcon } from '@radix-ui/react-icons';
-import React, { type SetStateAction } from 'react';
+import React from 'react';
 import { ConfigManager } from './config_manager';
 
 export class ToolSystem {
@@ -110,7 +110,7 @@ export class ToolSystem {
         delete this.annotations[this.currentImageId][annotation.id];
     }
 
-    selectAnnotations(annotationIDs: Annotation[]) {
+    selectAnnotations(annotationIDs: string[]) {
         this.selectedAnnotationIDs = annotationIDs;
         this.setSelectedAnnotationIDs(annotationIDs);
     }
@@ -118,7 +118,7 @@ export class ToolSystem {
     setCurrentImage(imageId: string) {
         this.currentImageId = imageId;
         if (!this.annotations[imageId]) {
-            this.annotations[imageId] = [];
+            this.annotations[imageId] = {};
         }
 
         this.selectedAnnotationIDs = [];

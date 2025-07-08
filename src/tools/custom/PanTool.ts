@@ -1,21 +1,32 @@
-import { ScrollArea } from 'radix-ui';
 import { ToolBase } from '../Tool';
 import { HandIcon } from '@radix-ui/react-icons';
-import { screenToWorld } from '@tools/helpers';
+import { screenToWorld } from '../helpers';
+import type ToolSystem from '../ToolSystem';
 
 class PanTool extends ToolBase {
-    constructor(toolSystem) {
+    isPanning: boolean;
+    lastPos: {x: number, y: number} | null;
+
+    constructor(toolSystem: ToolSystem) {
         super(toolSystem, "Pan", HandIcon, "H");
         this.isPanning = false;
         this.lastPos = null;
     }
 
-    onMouseDown(button, position, canvasRect) {
+    onMouseDown(button: number, position: {x: number, y: number}, canvasRect: DOMRect) {
+        switch (button) {
+            case 0:
+                this.onMB0(position);
+                break;
+        }
+    }
+
+    onMB0(position: {x: number, y: number}) {
         this.isPanning = true;
         this.lastPos = position;
     }
 
-    onMouseMove(position, canvasRect) {
+    onMouseMove(position: {x: number, y: number}) {
         if (!this.isPanning || !this.lastPos) return;
 
         const dx = position.x - this.lastPos.x;
@@ -31,12 +42,12 @@ class PanTool extends ToolBase {
         this.lastPos = position;
     }
 
-    onMouseUp(button, position, canvasRect) {
+    onMouseUp(button: number, position: {x: number, y: number}) {
         this.isPanning = false;
         this.lastPos = null;
     }
 
-    onScroll(deltaY, position, canvasRect) {
+    onScroll(deltaY: number, position: {x: number, y: number}, canvasRect: DOMRect) {
         // Zoom factor per scroll "tick"
         const ZOOM_SENSITIVITY = 1.1;
         const minScale = 0.05;
@@ -61,7 +72,7 @@ class PanTool extends ToolBase {
         }));
     }
 
-    onMouseLeave(event) {
+    onMouseLeave(event: React.MouseEvent<HTMLCanvasElement>) {
         this.isPanning = false;
         this.lastPos = null;
     }

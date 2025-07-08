@@ -1,15 +1,15 @@
 // Rectangle annotation tool
 import { ToolBase } from '../Tool';
-import { Annotation } from '@components/Annotation';
 import { CursorArrowIcon } from '@radix-ui/react-icons';
-import { screenToWorld, inBounds } from '@tools/helpers';
+import { screenToWorld, inBounds } from '../helpers';
+import type ToolSystem from '../ToolSystem';
 
 class SelectorTool extends ToolBase {
-    constructor(toolSystem) {
+    constructor(toolSystem: ToolSystem) {
         super(toolSystem, "Selector", CursorArrowIcon, "W");
     }
 
-    onMouseDown(button, position, canvasRect) {
+    onMouseDown(button: number, position: {x: number, y: number}, canvasRect: DOMRect) {
         switch (button) {
             case 0:
                 this.onMB0(position, canvasRect);
@@ -24,7 +24,7 @@ class SelectorTool extends ToolBase {
     }
 
     // LMB
-    onMB0(position, canvasRect) {
+    onMB0(position: {x: number, y: number}, canvasRect: DOMRect) {
         const selectedAnnotationsIDs = [];
         const annotations = Object.values(this.toolSystem.annotations[this.toolSystem.currentImageId]);
 
@@ -41,17 +41,17 @@ class SelectorTool extends ToolBase {
     }
 
     // MMB
-    onMB1(position, canvasRect) {
+    onMB1(position: {x: number, y: number}, canvasRect: DOMRect) {
     }
 
     // RMB
-    onMB2(position, canvasRect) {
+    onMB2(position: {x: number, y: number}, canvasRect: DOMRect) {
     }
 
-    onMouseMove(event, canvasRect) {
+    onMouseMove(position: { x: number, y: number }, canvasRect: DOMRect) {
     }
 
-    onMouseLeave(event) {
+    onMouseLeave(event: React.MouseEvent<HTMLCanvasElement>) {
     }
 }
 
