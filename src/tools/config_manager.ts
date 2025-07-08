@@ -75,8 +75,12 @@ export class ConfigManager {
         }
     }
 
-    getClassColor(className: string): string | undefined {
-        return this.config.classNames[className];
+    getClassColor(className: string): string {
+        if (this.config.classNames[className]) {
+            return this.config.classNames[className];
+        }
+
+        return '#FF0000';
     }
 
     // Keybinds management
