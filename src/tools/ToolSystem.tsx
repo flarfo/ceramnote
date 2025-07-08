@@ -1,14 +1,15 @@
 // Global tool manager, this will handle the base logic driving all classes extending Tool (defined in ../tools/custom).
 // Iterate over all tools and create a list from which to render toolbar, identify current event overrides.
 // Store currentTool, handle keybindings, etc.
-import { ToolBase } from '@tools/Tool';
-import { Annotation } from '@components/Annotation';
-import AnnotationHandle from '@components/AnnotationHandle';
-import RectangleTool from '@tools/custom/Rectangle';
-import PanTool from '@tools/custom/Pan';
-import SelectorTool from '@tools/custom/Selector';
+import { ToolBase } from './Tool';
+import { Annotation } from '../components/Annotation';
+import { AnnotationHandle } from '../components/AnnotationHandle';
+import RectangleTool from './custom/RectangleTool';
+import PanTool from './custom/PanTool';
+import SelectorTool from './custom/SelectorTool';
 import { TriangleRightIcon } from '@radix-ui/react-icons';
-import React, { type SetStateAction } from 'react';
+import React from 'react';
+import { ConfigManager } from './config_manager';
 
 export class ToolSystem {
     tools: ToolBase[] = [];
@@ -19,11 +20,21 @@ export class ToolSystem {
     keybindMap: { [key: string]: string } = {};
     toolConfig: { [key: string]: any } = {};
     currentImageId: string = '';
+    currentAnnotationClass: string = '';
     viewport: { x: number, y: number, scale: number };
     setViewport: React.Dispatch<React.SetStateAction<{ x: number, y: number, scale: number }>>;
     setSelectedAnnotationIDs: React.Dispatch<React.SetStateAction<string[]>>;
+    configManager: ConfigManager | null = null;
+    onToolChange?: (tool: ToolBase | null) => void;
+    onAnnotationClassChange?: (className: string) => void;
 
-    constructor(setViewport, setSelectedAnnotationIDs) {
+    constructor(
+        setViewport: React.Dispatch<React.SetStateAction<{ x: number, y: number, scale: number }>>,
+        setSelectedAnnotationIDs: React.Dispatch<React.SetStateAction<string[]>>,
+        configManager?: ConfigManager,
+        onToolChange?: (tool: ToolBase | null) => void,
+        onAnnotationClassChange?: (className: string) => void,
+    ) {
         // Register tools
         this.tools = [
             new RectangleTool(this),
@@ -32,14 +43,59 @@ export class ToolSystem {
         ];
         this.setViewport = setViewport;
         this.setSelectedAnnotationIDs = setSelectedAnnotationIDs;
+        this.onAnnotationClassChange = onAnnotationClassChange;
+        this.configManager = configManager || null;
+        this.onToolChange = onToolChange;
         this.viewport = { x: 0, y: 0, scale: 1 };
-        this.keybindMap = {}; // key: keybind, value: toolName
+        this.keybindMap = configManager?.getKeybinds() || {};
         this.toolConfig = {}; // Set config via useEffect onUpload?
+
+        // Set default tool to first tool
+        if (this.tools.length > 0) {
+            this.setCurrentTool(this.tools[0]);
+        }
     }
 
     setCurrentTool(tool: ToolBase) {
         this.currentTool = tool;
         tool.onToolSelected(this);
+        // Notify the callback about tool change
+        if (this.onToolChange) {
+            this.onToolChange(tool);
+        }
+    }
+
+    getCurrentAnnotationClass(): string {
+        // If no class is selected, default to the first available class
+        if (!this.currentAnnotationClass) {
+            const classNames = this.configManager?.getClassNames() || {};
+            const classKeys = Object.keys(classNames);
+
+            if (classKeys.length > 0) {
+                this.currentAnnotationClass = classKeys[0];
+            } else {
+                // Fallback if no classes exist
+                this.currentAnnotationClass = 'Default';
+            }
+        }
+
+        return this.currentAnnotationClass;
+    }
+
+    setCurrentAnnotationClass(className: string): void {
+        const classNames = this.configManager?.getClassNames() || {};
+        if (classNames[className]) {
+            this.currentAnnotationClass = className;
+            // Notify about the change
+            this.onAnnotationClassChange?.(className);
+        }
+    }
+
+    // Method to update keybinds when config changes
+    updateKeybinds() {
+        if (this.configManager) {
+            this.keybindMap = this.configManager.getKeybinds();
+        }
     }
 
     addAnnotation(annotation: Annotation) {
@@ -54,7 +110,7 @@ export class ToolSystem {
         delete this.annotations[this.currentImageId][annotation.id];
     }
 
-    selectAnnotations(annotationIDs: Annotation[]) {
+    selectAnnotations(annotationIDs: string[]) {
         this.selectedAnnotationIDs = annotationIDs;
         this.setSelectedAnnotationIDs(annotationIDs);
     }
@@ -62,7 +118,7 @@ export class ToolSystem {
     setCurrentImage(imageId: string) {
         this.currentImageId = imageId;
         if (!this.annotations[imageId]) {
-            this.annotations[imageId] = [];
+            this.annotations[imageId] = {};
         }
 
         this.selectedAnnotationIDs = [];
@@ -77,6 +133,7 @@ export class ToolSystem {
             const tool = this.tools.find(t => t.name === toolName);
             if (tool) this.setCurrentTool(tool);
         }
+
         if (this.currentTool) this.currentTool.onKeyDown(event);
     }
 

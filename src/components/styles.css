@@ -1,11 +1,247 @@
+/* reset */
+button,
+fieldset,
+input {
+	all: unset;
+}
 
+.DialogOverlay {
+	background-color: rgba(0, 0, 0, 0.5);
+	position: fixed;
+	inset: 0;
+	animation: overlayShow 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.DialogContent {
+    background-color: var(--color-medium-light);
+    border-radius: 6px;
+    box-shadow:
+        0px 10px 38px -10px rgba(22, 23, 24, 0.5),
+        0px 10px 20px -15px rgba(22, 23, 24, 0.3);
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90vw;
+    max-width: 450px;
+    max-height: 85vh;
+    padding: 25px;
+    animation: contentShow 150ms cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+}
+
+.DialogContent:focus {
+	outline: none;
+}
+
+.DialogTitle {
+	margin: 0 0 10px;
+	font-weight: 500;
+	color: white;
+	font-size: 17px;
+}
+
+.DialogDescription {
+	margin: 0 0 20px;
+	color: white;
+	font-size: 15px;
+	line-height: 1.5;
+	opacity: 0.8;
+}
+
+.ClassesList {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.ClassesList::-webkit-scrollbar {
+    width: 8px;
+}
+
+.ClassesList::-webkit-scrollbar-track {
+    background: var(--color-medium);
+    border-radius: 4px;
+}
+
+.ClassesList::-webkit-scrollbar-thumb {
+    background: var(--color-dark);
+    border-radius: 4px;
+}
+
+.ClassesList::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+.ColorInput {
+    width: 40px;
+    height: 32px;
+    border: 1px solid var(--color-medium);
+    border-radius: 4px;
+    cursor: pointer;
+    background: transparent;
+}
+
+.ColorInput:focus {
+    outline: none;
+    border-color: var(--color-dark);
+}
+
+.ClassItem {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.ClassInput {
+	flex: 1;
+	padding: 8px 12px;
+	border: 1px solid var(--color-medium);
+	border-radius: 4px;
+	font-size: 14px;
+	background-color: var(--color-medium);
+	color: white;
+}
+
+.ClassInput:focus {
+	border-color: var(--color-dark);
+	outline: none;
+}
+
+.DeleteButton {
+	background: var(--color-dark);
+	color: white;
+	border: none;
+	border-radius: 4px;
+	padding: 8px;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 25px;
+	width: 25px;
+}
+
+.DeleteButton:hover {
+	background-color: #ff4444;
+}
+
+.AddButton {
+	background: var(--color-dark);
+	color: white;
+	border: none;
+	border-radius: 4px;
+	padding: 10px 16px;
+	cursor: pointer;
+	margin-bottom: 20px;
+	font-size: 13px;
+	font-weight: 500;
+}
+
+.AddButton:hover {
+	background-color: var(--color-medium);
+}
+
+.DialogActions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 10px;
+}
+
+.Button {
+	border-radius: 4px;
+	padding: 0 15px;
+	font-size: 13px;
+	font-weight: 500;
+	cursor: pointer;
+	border: none;
+	height: 35px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	user-select: none;
+}
+
+.Button:focus {
+	outline: none;
+}
+
+.Button.green {
+	background-color: var(--color-dark);
+	color: white;
+}
+
+.Button.green:hover {
+	background-color: var(--color-medium);
+}
+
+.Button.gray {
+	background-color: var(--color-medium);
+	color: white;
+}
+
+.Button.gray:hover {
+	background-color: var(--color-dark);
+}
+
+.IconButton {
+	all: unset;
+	font-family: inherit;
+	border-radius: 100%;
+	height: 25px;
+	width: 25px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	color: white;
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	background-color: var(--color-medium);
+	cursor: pointer;
+}
+
+.IconButton:hover {
+	background-color: var(--color-dark);
+}
+
+.IconButton:focus {
+	outline: none;
+}
+
+@keyframes overlayShow {
+	from {
+		opacity: 0;
+	}
+
+	to {
+		opacity: 1;
+	}
+}
+
+@keyframes contentShow {
+	from {
+		opacity: 0;
+		transform: translate(-50%, -48%) scale(0.96);
+	}
+
+	to {
+		opacity: 1;
+		transform: translate(-50%, -50%) scale(1);
+	}
+}
 
 .MenubarRoot {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    width: 100%;
-    background-color: var(--color-medium-light);
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	width: 100%;
+	background-color: var(--color-medium-light);
 }
 
 .MenubarTrigger {
@@ -34,7 +270,7 @@
 	background-color: var(--color-medium-light);
 	border-radius: 6px;
 	padding: 5px;
-    margin-top: 4px;
+	margin-top: 4px;
 	box-shadow:
 		0px 10px 38px -10px rgba(22, 23, 24, 0.5),
 		0px 10px 20px -15px rgba(22, 23, 24, 0.3);
@@ -109,10 +345,10 @@
 	color: var(--color-dark);
 }
 
-[data-highlighted] > .RightSlot {
+[data-highlighted]>.RightSlot {
 	color: white;
 }
 
-[data-disabled] > .RightSlot {
+[data-disabled]>.RightSlot {
 	color: var(--color-dark);
 }

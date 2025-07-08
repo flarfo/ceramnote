@@ -2,17 +2,29 @@ import { useRef, useEffect, useState } from 'react';
 import type ToolSystem from '../tools/ToolSystem';
 import { Annotation } from './Annotation';
 import JSZip from 'jszip';
+import type { ConfigManager } from '../tools/config_manager';
+
+const hexToRgba = (hex: string, alpha: number = 1.0) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? `rgba(${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}, ${alpha})` : 'rgba(0, 0, 0, 1.0)';
+}
+
+const hexToInverseRgba = (hex: string, alpha: number = 1.0) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? `rgba(${255 - parseInt(result[1], 16)}, ${255 - parseInt(result[2], 16)}, ${255 - parseInt(result[3], 16)}, ${alpha})` : 'rgba(0, 0, 0, 1.0)';
+}
 
 interface CanvasProps {
     image: HTMLImageElement;
     currentImageId: string;
     backgroundColor: string;
     toolSystem: ToolSystem;
+    configManager: ConfigManager;
     viewport: { x: number, y: number, scale: number };
 };
 
 const Canvas: React.FC<CanvasProps> = (props) => {
-    const { image, currentImageId, backgroundColor, toolSystem, viewport } = props;
+    const { image, currentImageId, backgroundColor, toolSystem, configManager, viewport } = props;
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
     const canvasSize = {
@@ -68,7 +80,7 @@ const Canvas: React.FC<CanvasProps> = (props) => {
                     imagesFolder?.file(fileName, blob);
 
                     // Add annotation data to JSON
-                    annotation.save(blob);
+                    // annotation.save(blob);
                     annotationsData.push({
                         annotation: annotation,
                         imageUrl: `images/${fileName}`,
@@ -134,19 +146,27 @@ const Canvas: React.FC<CanvasProps> = (props) => {
                 const w = Math.abs(end.x - start.x);
                 const h = Math.abs(end.y - start.y);
                 ctx.save();
-                ctx.strokeStyle = annot.color || '#FF0000';
+
+                const baseColor = configManager.getClassColor(annot.name);
+
+                const color = hexToRgba(baseColor, 0.1);
+                const inverse = hexToInverseRgba(baseColor, 0.1);
+
+                ctx.strokeStyle = selected? inverse : color;
                 ctx.lineWidth = 1 / (viewport?.scale || 1);
                 ctx.strokeRect(x, y, w, h);
-                ctx.fillStyle = selected ? `rgba(0, 125, 180, 0.25)` : `rgba(255, 0, 0, 0.25)`;
+                ctx.fillStyle = selected ? inverse : color;
                 ctx.fillRect(x, y, w, h);
                 ctx.restore();
 
-                const fontSize = Math.max(40, 10 / viewport?.scale || 1);
-                const padding = Math.max(4, fontSize * 0.2);
-                ctx.font = `${fontSize}px Arial`;
-                ctx.textBaseline = 'top';
-                ctx.fillStyle = selected ? '#007DB4' : '#B41414';
-                ctx.fillText(annot.name, x + padding, y + padding);
+                if (selected) {
+                    const fontSize = Math.max(20, 8 / viewport?.scale || 1);
+                    const padding = Math.max(4, fontSize * 0.2);
+                    ctx.font = `${fontSize}px Arial`;
+                    ctx.textBaseline = 'top';
+                    ctx.fillStyle = selected ? hexToInverseRgba(baseColor, 0.75) : hexToRgba(baseColor, 0.75);
+                    ctx.fillText(annot.name, x + padding, y + padding);
+                }
             }
         });
     };
