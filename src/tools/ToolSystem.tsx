@@ -7,6 +7,7 @@ import { AnnotationHandle } from '../components/AnnotationHandle';
 import RectangleTool from './custom/RectangleTool';
 import PanTool from './custom/PanTool';
 import SelectorTool from './custom/SelectorTool';
+import AssociatorTool from './custom/AssociatorTool';
 import { TriangleRightIcon } from '@radix-ui/react-icons';
 import React from 'react';
 import { ConfigManager } from './config_manager';
@@ -40,6 +41,7 @@ export class ToolSystem {
             new RectangleTool(this),
             new PanTool(this),
             new SelectorTool(this),
+            new AssociatorTool(this),
         ];
         this.setViewport = setViewport;
         this.setSelectedAnnotationIDs = setSelectedAnnotationIDs;

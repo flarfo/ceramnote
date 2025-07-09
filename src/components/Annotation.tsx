@@ -9,7 +9,7 @@ export class Annotation {
     name: string;
     id: string;
     bounds: {x: number, y: number}[];
-    associations: string[] = [];
+    associations: Annotation[] = [];
     inspectorArgs: InspectorProps = {};
     constructor(type: string, bounds: {x: number, y: number}[], associations = [], name = 'test') {
         this.type = type;
@@ -28,14 +28,14 @@ export class Annotation {
     
     // Add association
     addAssociation(annotation: Annotation) {
-        if (!this.associations.includes(annotation.id)) {
-            this.associations.push(annotation.id);
+        if (!this.associations.includes(annotation)) {
+            this.associations.push(annotation);
         }
     }
 
     // Remove association
     removeAssociation(annotation: Annotation) {
-        this.associations = this.associations.filter(id => id !== annotation.id);
+        this.associations = this.associations.filter(cur => cur.id !== annotation.id);
     }
 
     // NOTE: Logic for controlling the Annotation object should be handled by different tools.
