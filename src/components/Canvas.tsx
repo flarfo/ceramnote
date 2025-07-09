@@ -149,15 +149,14 @@ const Canvas: React.FC<CanvasProps> = (props) => {
 
                 const baseColor = configManager.getClassColor(annot.name);
 
-                const color = hexToRgba(baseColor, 0.1);
-                const inverse = hexToInverseRgba(baseColor, 0.1);
+                const color = hexToRgba(baseColor, 0.2);
+                const inverse = hexToInverseRgba(baseColor, 0.2);
 
-                ctx.strokeStyle = selected? inverse : color;
+                ctx.strokeStyle = selected ? inverse : color;
                 ctx.lineWidth = 1 / (viewport?.scale || 1);
                 ctx.strokeRect(x, y, w, h);
                 ctx.fillStyle = selected ? inverse : color;
                 ctx.fillRect(x, y, w, h);
-                ctx.restore();
 
                 if (selected) {
                     const fontSize = Math.max(20, 8 / viewport?.scale || 1);
@@ -166,7 +165,24 @@ const Canvas: React.FC<CanvasProps> = (props) => {
                     ctx.textBaseline = 'top';
                     ctx.fillStyle = selected ? hexToInverseRgba(baseColor, 0.75) : hexToRgba(baseColor, 0.75);
                     ctx.fillText(annot.name, x + padding, y + padding);
+
+                    ctx.lineWidth = 30;
+                    ctx.fillStyle = hexToInverseRgba(baseColor, 0.9);
+                    annot.associations.forEach((association: Annotation) => {
+                        const [aStart, aEnd] = association.bounds;
+                        const aX = Math.min(aStart.x, aEnd.x);
+                        const aY = Math.min(aStart.y, aEnd.y);
+                        const aW = Math.abs(aEnd.x - aStart.x);
+                        const aH = Math.abs(aEnd.y - aStart.y);
+
+                        ctx.beginPath();
+                        ctx.moveTo(x + w / 2, y + h / 2);
+                        ctx.lineTo(aX + aW / 2, aY + aH / 2);
+                        ctx.stroke();
+                    });
                 }
+
+                ctx.restore();
             }
         });
     };
