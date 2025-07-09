@@ -24,8 +24,12 @@ function App() {
 	// Warmed-up and ready for use
 	const [loadedModels, setLoadedModels] = useState<Record<string, InferenceSession>>({});
 	// Initial state should be default models (already stored in public directory)
+	// TODO: add session config for each model, i.e. user can change confidence levels, id -> class mappings
 	const [availableModels, setAvailableModels] = useState<Record<string, string>>(
-		{'tile_detector': '/models/tile_detector.onnx'} 	
+		{
+			'tile_detector': '/models/tile_detector.onnx', 
+			'text_detector': '/models/text_detector.onnx',
+		}
 	);
 	const [selectedModels, setSelectedModels] = useState<string[]>([]);
 
