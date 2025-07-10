@@ -4,6 +4,9 @@ import { CursorArrowIcon } from '@radix-ui/react-icons';
 import { screenToWorld, inBounds } from '../helpers';
 import type ToolSystem from '../ToolSystem';
 
+/**
+ * Allows the user to click and select an annotation.
+ */
 class SelectorTool extends ToolBase {
     constructor(toolSystem: ToolSystem) {
         super(toolSystem, "Selector", CursorArrowIcon, "W");

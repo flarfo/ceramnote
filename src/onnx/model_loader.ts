@@ -1,5 +1,12 @@
 import * as ort from 'onnxruntime-web/wasm';
 
+/**
+ * Loads and warms up specific ONNX model for later usage. 
+ * @param device Processing backend; 'wasm'/'webgl'/'webgpu'
+ * @param model_path Path to ONNX model
+ * @param config 
+ * @returns Loaded model
+ */
 export const model_loader = async (device: string = 'wasm', model_path: string, config: { input_shape: number[] }) => {
     ort.env.wasm.wasmPaths = '/';
 

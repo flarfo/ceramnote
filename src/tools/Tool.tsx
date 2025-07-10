@@ -2,7 +2,9 @@ import type { IconProps } from '@radix-ui/react-icons/dist/types';
 import ToolSystem from './ToolSystem';
 import type { ComponentType } from 'react';
 
-// Tool base class
+/**
+ * Tool base class; override functions for custom tools.
+ */
 export class ToolBase {
     name: string;
     icon: ComponentType<IconProps>

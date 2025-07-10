@@ -13,9 +13,13 @@ import { inference_pipeline } from './onnx/inference_pipeline';
 import type { InferenceSession } from 'onnxruntime-web/wasm';
 import { Annotation } from './components/Annotation';
 
+/**
+ * App component; base rendering point, handles cross-component state. 
+ */
 function App() {
-	const [image, setImage] = useState<HTMLImageElement | null>(null);
-	const [imageFiles, setImageFiles] = useState<FileList | null>(null);
+	const [image, setImage] = useState<HTMLImageElement | null>(null); // Current loaded image
+	// TODO: allow user to switch to new image from list of all uploaded
+	const [imageFiles, setImageFiles] = useState<FileList | null>(null); // All image files (if multiple selected)
 	const [isImageLoaded, setIsImageLoaded] = useState(false);
 	const [panelSize, setPanelSize] = useState(80);
 	const [selectedAnnotationIDs, setSelectedAnnotationIDs] = useState<string[]>([]);
@@ -109,11 +113,16 @@ function App() {
 		};
 	}, [imageFiles]);
 
+	/**
+	 * Load all newly selected models.
+	 * @param models List of currently selected models
+	 */
 	const handleModelSelect = async (models: string[]) => {
 		// Load newly selected models
 		console.log(availableModels);
 		for (let i = 0; i < models.length; i++) {
 			const modelName= models[i];
+			// If already loaded, ignore
 			if (!loadedModels[modelName]) {
 				const modelPath = availableModels[modelName];
 
@@ -126,9 +135,10 @@ function App() {
 		// Unload deselected models
 		for (const modelName of Object.keys(loadedModels)) {
 			if (!models.includes(modelName)) {
-				// Optionally dispose session if needed
+				// Dispose session on deload
 				setLoadedModels(prev => {
 					const copy = { ...prev };
+					copy[modelName].release();
 					delete copy[modelName];
 
 					return copy;
@@ -139,6 +149,10 @@ function App() {
 		setSelectedModels(models);
 	};
 
+	/**
+	 * Load custom user uploaded ONNX CNN model.
+	 * @param file File representing model
+	 */
 	const handleCustomModelUpload = (file: File) => {
 		const customModelName = `Custom: ${file.name}`;
 		
@@ -147,12 +161,15 @@ function App() {
 			[customModelName]: URL.createObjectURL(file) 
 		}));
 
-		// Save file to a blob URL or IndexedDB if needed
 		// NOTE: doesn't properly pass state, since availableModels isn't updated immediately.
 		//		 could re-add, but not dire.
 		// handleModelSelect([...selectedModels, customModelName]);
 	};
 
+	/**
+	 * Runs all currently loaded ONNX models over currently loaded image in series.
+	 * Creates new annotations for detected bounding boxes via onnx/inference_pipeline.
+	 */
 	const handlePrepocessors = async () => {
 		// TODO: preload model on select
 		// TODO: prevent multiple cnn inference passes on single image
@@ -166,6 +183,7 @@ function App() {
 			console.log('Time:', time);
 			console.log(results);
 
+			// Create new annotation
 			for (const result of results) {
 				const [x, y, w, h] = result.bbox;
 				const annotation = new Annotation('rectangle', [{ x, y }, { x: x + w, y: y + h }], [], 'tile');
