@@ -1,16 +1,30 @@
 import React from 'react';
 import { AnnotationHandle } from './AnnotationHandle';
-import { type InspectorProps } from './Inspector';
 
 // Defines the base class for all annotation objects on the Canvas. This is rendered as an overlay on the image,
 // showing the bounds for a specific annotation from which to extract data on export.
 export class Annotation {
+    [key: string]: any;
     type: string;
     name: string;
     id: string;
+    tile_data: Record<string, string | number> = {
+        'ColorName': '',
+        'ColorL': 0,
+        'ColorA': 0,
+        'ColorB': 0,
+        'GlazeType': '',
+        'FiringTemperature': 0,
+        'ChemicalComposition': '',
+        'FiringType': '',
+        'SoilType': '',
+    };
     bounds: {x: number, y: number}[];
     associations: Annotation[] = [];
-    inspectorArgs: InspectorProps = {};
+    inspectorArgs: string[] = [
+        'tile_data',
+        'bounds',
+    ];
     constructor(type: string, bounds: {x: number, y: number}[], associations = [], name = 'test') {
         this.type = type;
         this.name = name;
@@ -18,8 +32,6 @@ export class Annotation {
         this.bounds = bounds; // e.g., [{x, y}, ...]
         this.associations = associations; // array of Annotation ids or refs
         this.id = Annotation.generateId();
-
-        this.inspectorArgs['position'] = bounds;
     };
 
     static generateId() {

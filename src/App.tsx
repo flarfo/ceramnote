@@ -28,7 +28,6 @@ function App() {
 	const [availableModels, setAvailableModels] = useState<Record<string, string>>(
 		{
 			'tile_detector': '/models/tile_detector.onnx', 
-			'text_detector': '/models/text_detector.onnx',
 		}
 	);
 	const [selectedModels, setSelectedModels] = useState<string[]>([]);
@@ -154,7 +153,7 @@ function App() {
 		// handleModelSelect([...selectedModels, customModelName]);
 	};
 
-	const handle_ImageLoad = async () => {
+	const handlePrepocessors = async () => {
 		// TODO: preload model on select
 		// TODO: prevent multiple cnn inference passes on single image
 		if (!image || !configManager) return;
@@ -213,6 +212,7 @@ function App() {
 				selectedModels={selectedModels}
 				onModelSelect={handleModelSelect}
 				onCustomModelUpload={handleCustomModelUpload}
+				onPreprocess={handlePrepocessors}
 			/>
 			<PanelGroup direction="horizontal" style={{ height: '100vh' }}>
 				<Panel defaultSize={15} minSize={10} className='bg-(--color-medium)'>
@@ -259,11 +259,6 @@ function App() {
 				<PanelResizeHandle style={{ width: '4px', background: '#ccc' }} />
 				<Panel defaultSize={10} minSize={5} className='bg-(--color-medium)'>
 					{/* Right panel for displaying annotations/image scrollbar */}
-					<button
-						onClick={handle_ImageLoad}
-					>
-						awesome button
-					</button>
 				</Panel>
 			</PanelGroup>
 		</div>
