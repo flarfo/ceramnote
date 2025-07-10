@@ -21,6 +21,7 @@ interface FilebarProps {
 	selectedModels: string[];
 	onModelSelect: (modelNames: string[]) => void;
 	onCustomModelUpload: (file: File) => void;
+	onPreprocess: () => void;
 }
 
 const Filebar: React.FC<FilebarProps> = ({
@@ -31,7 +32,8 @@ const Filebar: React.FC<FilebarProps> = ({
 	availableModels,
 	selectedModels,
 	onModelSelect,
-	onCustomModelUpload
+	onCustomModelUpload,
+	onPreprocess
 }) => {
 
 	const [checkedSelection, setCheckedSelection] = React.useState([
@@ -267,6 +269,12 @@ const Filebar: React.FC<FilebarProps> = ({
 						>
 							Upload Model
 						</Menubar.Item>
+						<Menubar.Separator className='MenubarSeparator' />
+						<Menubar.Item className='MenubarItem inset'
+							onClick={onPreprocess}
+						>
+							Preprocess
+						</Menubar.Item>
 					</Menubar.Content>
 				</Menubar.Portal>
 			</Menubar.Menu>
@@ -319,7 +327,6 @@ const Filebar: React.FC<FilebarProps> = ({
 								</Menubar.SubContent>
 							</Menubar.Portal>
 						</Menubar.Sub>
-						<Menubar.Item className='MenubarItem'>Edit…</Menubar.Item>
 						<Menubar.Separator className='MenubarSeparator' />
 						<Menubar.Item className='MenubarItem'>Import</Menubar.Item>
 						<Menubar.Item className='MenubarItem'>Download</Menubar.Item>
