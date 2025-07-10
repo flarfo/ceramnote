@@ -6,15 +6,24 @@ import * as Label from '@radix-ui/react-label';
 import * as Separator from '@radix-ui/react-separator';
 import * as Checkbox from '@radix-ui/react-checkbox';
 import { CheckIcon } from '@radix-ui/react-icons';
+
 // Helper to update nested value by path
 function setNestedValue(obj: any, path: (string | number)[], value: any) {
     if (path.length === 1) {
         obj[path[0]] = value;
         return;
     }
+
     setNestedValue(obj[path[0]], path.slice(1), value);
 }
 
+/**
+ * 
+ * @param path Path to current variable within object.
+ * @param annotation Base annotation within which variables lie.
+ * @param onChange 
+ * @returns 
+ */
 const getInspectorField = (
     path: (string | number)[],
     annotation: Annotation,
@@ -24,6 +33,7 @@ const getInspectorField = (
     let value: any = annotation;
     for (const key of path) value = value[key];
 
+    // Render text field for strings
     if (typeof value === 'string') {
         return (
             <div className="relative inline-flex px-3 py-2 text-xs bg-[var(--color-dark)] border border-[var(--color-medium-light)] rounded-md text-[var(--color-light)]">
@@ -35,6 +45,8 @@ const getInspectorField = (
             </div>
         );
     }
+
+    // Render number text field for numbers (same as string, but with casting)
     if (typeof value === 'number') {
         return (
             <div className="relative inline-flex px-3 py-2 text-xs bg-[var(--color-dark)] border border-[var(--color-medium-light)] rounded-md text-[var(--color-light)]">
@@ -46,6 +58,8 @@ const getInspectorField = (
             </div>
         );
     }
+
+    // Render checkbox for bools
     if (typeof value === 'boolean') {
         return (
             <div className="flex items-center space-x-2">
@@ -64,6 +78,8 @@ const getInspectorField = (
             </div>
         );
     }
+
+    // Nested rendering for arrays
     if (Array.isArray(value)) {
         return (
             <div className="pl-4 border-l-2 border-[var(--color-medium-light)] ml-1 space-y-2">
@@ -80,6 +96,8 @@ const getInspectorField = (
             </div>
         );
     }
+
+    // Nested rendering for objects
     if (typeof value === 'object' && value !== null) {
         return (
             <div className="pl-4 border-l-2 border-[var(--color-medium-light)] ml-1 space-y-2">
@@ -103,6 +121,10 @@ const getInspectorField = (
     );
 };
 
+/**
+ * Inspector component; allows for dynamic, direct access of annotation objects via objects 
+ * in Annotation.inspectorArgs
+  */
 export const Inspector = ({
     toolSystem,
     selectedAnnotationIDs

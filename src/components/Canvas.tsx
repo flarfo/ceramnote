@@ -23,6 +23,10 @@ interface CanvasProps {
     viewport: { x: number, y: number, scale: number };
 };
 
+/**
+ * Canvas component for rendering image and annotations.
+ * Handles drawing, event detection, and exporting annotations.
+ */
 const Canvas: React.FC<CanvasProps> = (props) => {
     const { image, currentImageId, backgroundColor, toolSystem, configManager, viewport } = props;
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -38,12 +42,17 @@ const Canvas: React.FC<CanvasProps> = (props) => {
 
     const [mousePos, setMousePos] = useState<{ x: number, y: number } | null>(null);
 
+    /**
+     * Saves all images to annotations.zip/images and all annotations to annotations.zip/annotations.json.
+     * Save code found in Annotation.save() [<-- TO IMPLEMENT]
+     */
     const save = async () => {
         const canvas = canvasRef.current;
         if (!canvas) return;
         const context = canvas.getContext('2d');
         if (!context) return;
 
+        // Create new zip folder to store all data
         const zip = new JSZip();
         const imagesFolder = zip.folder('images');
         const annotationsData: { annotation: Annotation; imageUrl: string }[] = [];
@@ -80,7 +89,6 @@ const Canvas: React.FC<CanvasProps> = (props) => {
                     imagesFolder?.file(fileName, blob);
 
                     // Add annotation data to JSON
-                    // annotation.save(blob);
                     annotationsData.push({
                         annotation: annotation,
                         imageUrl: `images/${fileName}`,
@@ -104,13 +112,14 @@ const Canvas: React.FC<CanvasProps> = (props) => {
 
     // Draw all annotations
     const draw = (ctx: CanvasRenderingContext2D) => {
+        // See tools/helpers.ts: screenToWorld / worldToScreen for more.
         // screen = (world + viewport) * scale
         // world = (screen / scale) - viewport
         if (image) {
             ctx.drawImage(image, 0, 0);
         }
 
-        // Draw grid (optional, as before)
+        // Draw grid
         if (viewport) {
             ctx.strokeStyle = `rgba(100,100,100,0.15)`;
             ctx.lineWidth = 0.8 / viewport.scale;
@@ -134,12 +143,13 @@ const Canvas: React.FC<CanvasProps> = (props) => {
             ctx.stroke();
         }
 
-        // Draw rectangle annotations for the current image
         const annots = Object.values(toolSystem?.annotations?.[currentImageId] || []);
         annots.forEach((annot: Annotation) => {
+            // Draw rectangle annotations for the current image
             if (annot.type === 'rectangle' && annot.bounds && annot.bounds.length === 2) {
                 const selected = toolSystem?.selectedAnnotationIDs.includes(annot.id);
 
+                // Get bounds
                 const [start, end] = annot.bounds;
                 const x = Math.min(start.x, end.x);
                 const y = Math.min(start.y, end.y);
@@ -158,7 +168,9 @@ const Canvas: React.FC<CanvasProps> = (props) => {
                 ctx.fillStyle = selected ? inverse : color;
                 ctx.fillRect(x, y, w, h);
 
+                // Conditional drawing for currently selected annotation(s)
                 if (selected) {
+                    // Display text
                     const fontSize = Math.max(20, 8 / viewport?.scale || 1);
                     const padding = Math.max(4, fontSize * 0.2);
                     ctx.font = `${fontSize}px Arial`;
@@ -168,6 +180,7 @@ const Canvas: React.FC<CanvasProps> = (props) => {
 
                     ctx.lineWidth = 30;
                     ctx.fillStyle = hexToInverseRgba(baseColor, 0.9);
+                    // Draw associations (line from selected annotation to associated annotation)
                     annot.associations.forEach((association: Annotation) => {
                         const [aStart, aEnd] = association.bounds;
                         const aX = Math.min(aStart.x, aEnd.x);
@@ -193,6 +206,10 @@ const Canvas: React.FC<CanvasProps> = (props) => {
         const context = canvas.getContext('2d');
         if (!context) return;
 
+        /**
+         * Handles rendering and scale/translation for the canvas.
+         * Adds additional features, i.e. mouse crosshair.
+         */
         const render = () => {
             context.save();
 
@@ -209,6 +226,7 @@ const Canvas: React.FC<CanvasProps> = (props) => {
 
             draw(context);
 
+            // Draw mouse crosshair
             if (mousePos) {
                 context.save();
                 context.setTransform(1, 0, 0, 1, 0, 0);
@@ -233,6 +251,7 @@ const Canvas: React.FC<CanvasProps> = (props) => {
 
     // TODO: add tool default behaviours for certain button presses.
     // For example, select tool MMB should pan
+    // All tool event handlers rooted here:
     return (
         <canvas
             ref={canvasRef}

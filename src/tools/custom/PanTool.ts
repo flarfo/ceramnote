@@ -3,6 +3,9 @@ import { HandIcon } from '@radix-ui/react-icons';
 import { screenToWorld } from '../helpers';
 import type ToolSystem from '../ToolSystem';
 
+/**
+ * Allows the user to pan/zoom the canvas.
+ */
 class PanTool extends ToolBase {
     isPanning: boolean;
     lastPos: {x: number, y: number} | null;

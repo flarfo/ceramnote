@@ -6,6 +6,9 @@ import type ToolSystem from '../ToolSystem';
 import type { Annotation } from '../../components/Annotation';
 
 // TODO: store associations as IDs, also provide indicator for annotation occurring
+/**
+ * Allows two associations to be directly  linked for saving.
+ */
 class AssociatorTool extends ToolBase {
     selectedAnnotations: Annotation[] = [];
     constructor(toolSystem: ToolSystem) {

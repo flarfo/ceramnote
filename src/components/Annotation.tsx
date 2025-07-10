@@ -21,6 +21,9 @@ export class Annotation {
     };
     bounds: {x: number, y: number}[];
     associations: Annotation[] = [];
+
+    // Inspector Arguments; these are automatically processed by the Inspector component to display
+    //      and modify the annotation.
     inspectorArgs: string[] = [
         'tile_data',
         'bounds',
@@ -34,6 +37,7 @@ export class Annotation {
         this.id = Annotation.generateId();
     };
 
+    // Random ID used to index ToolSystem.annotations
     static generateId() {
         return 'ann_' + Math.random().toString(36).slice(2, 9);
     };

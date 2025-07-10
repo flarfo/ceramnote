@@ -24,6 +24,9 @@ interface FilebarProps {
 	onPreprocess: () => void;
 }
 
+/**
+ * Filebar component; displays filebar and handles system interaction beyond basic tools.
+ */
 const Filebar: React.FC<FilebarProps> = ({
 	setImageFiles,
 	configManager,
@@ -43,6 +46,10 @@ const Filebar: React.FC<FilebarProps> = ({
 	const [isClassesDialogOpen, setIsClassesDialogOpen] = React.useState(false);
 	const [classItems, setClassItems] = React.useState<Array<{ id: string, name: string, color: string }>>([]);
 
+	/**
+	 * Select a ONNX model from the list of models,
+	 * @param model Name of ONNX model (stored in App.tsx/availableModels)
+	 */
 	const handleModelCheckboxChange = (model: string) => {
 		if (selectedModels.includes(model)) {
 			onModelSelect(selectedModels.filter(m => m !== model));
@@ -65,6 +72,9 @@ const Filebar: React.FC<FilebarProps> = ({
 		}
 	}, [configManager]);
 
+	/**
+	 * Save Config/class values.
+	 */
 	const handleSaveClasses = () => {
 		if (configManager) {
 			// Convert back to config format
@@ -78,6 +88,7 @@ const Filebar: React.FC<FilebarProps> = ({
 			configManager.setClassNames(configFormat);
 			configManager.saveToStorage();
 		}
+
 		setIsClassesDialogOpen(false);
 	};
 

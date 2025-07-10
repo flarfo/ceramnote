@@ -1,4 +1,10 @@
-// Converts screen (mouse) coordinates to world coordinates
+/**
+ * Converts screen (mouse) coordinates to world (canvas) coordinates.
+ * @param position Screen position
+ * @param viewport Viewport position and scale
+ * @param canvasRect Canvas DOM dimensions
+ * @returns 
+ */
 const screenToWorld = (
     position: { x: number, y: number },
     viewport: { x: number, y: number, scale: number },
@@ -9,7 +15,13 @@ const screenToWorld = (
     return { x, y };
 };
 
-// Converts world coordinates to screen (pixel) coordinates
+/**
+ * Converts world (canavs) coordinates to screen (mouse) coordinates
+ * @param world World position
+ * @param viewport Viewport position and scale
+ * @param canvasRect Canvas DOM dimensions
+ * @returns 
+ */
 const worldToScreen = (
     world: { x: number, y: number },
     viewport: { x: number, y: number, scale: number },
@@ -20,6 +32,12 @@ const worldToScreen = (
     return { x, y };
 };
 
+/**
+ * Determinnes if position lies within bounding box.
+ * @param position World position
+ * @param bounds Bounding box
+ * @returns 
+ */
 const inBounds = (
     position: { x: number, y: number },
     bounds: { x: number, y: number }[]

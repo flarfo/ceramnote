@@ -10,6 +10,11 @@ interface SessionConfig {
     yolo_model: ort.InferenceSession,
 }
 
+/**
+ * Run ONNX CNN model on image.
+* @param input_el Image to process
+ * @param sessionsConfig 
+ */
 export const inference_pipeline = async (input_el: HTMLImageElement, sessionsConfig: SessionConfig): Promise<[Prediction[], string]> => {
     try {
         const [preProcessed, div_width, div_height] = preProcess_dynamic(input_el);
@@ -24,19 +29,18 @@ export const inference_pipeline = async (input_el: HTMLImageElement, sessionsCon
             div_width,
         ]);
 
-        // inference
+        // Inference
         const start = performance.now();
         const { output0 } = await sessionsConfig.yolo_model.run({
             images: input_tensor,
         });
         const end = performance.now();
 
-        // post process
         const results = [];
         const [batch, attrs, num_anchors] = output0.dims;
         const confidenceThreshold = 0.7;
 
-        // post process
+        // Post process
         for (let i = 0; i < num_anchors; i++) {
             // Cast each value to number to avoid type errors
             const anchorData = new Float32Array([
@@ -66,8 +70,8 @@ export const inference_pipeline = async (input_el: HTMLImageElement, sessionsCon
         }
 
         output0.dispose();
-        //output_selected.dispose();
-        const filtered = nms(results, 0.1);
+        // Filter values based on object overlap (some duplicate predictions are made)
+        const filtered = nms(results, 0.5);
         return [filtered, (end - start).toFixed(2)];
     }
     catch (err) {
@@ -146,7 +150,7 @@ function iou(boxA: number[], boxB: number[]) {
 
 /**
  * Non-Maximum Suppression (NMS) for a list of predictions.
- * Returns filtered predictions.
+ * @return Filtered predictions.
  */
 export function nms(predictions: Prediction[], iouThreshold: number = 0.5) {
     // Sort by descending score

@@ -5,6 +5,9 @@ import { SquareIcon } from '@radix-ui/react-icons';
 import { screenToWorld } from '../helpers';
 import type ToolSystem from '../ToolSystem';
 
+/**
+ * Allows the user to create a new bounding box.
+ */
 class RectangleTool extends ToolBase {
     startPoint: {x: number, y: number} | null;
     curAnnotation: Annotation | null;
