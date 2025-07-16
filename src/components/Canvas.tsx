@@ -3,7 +3,7 @@ import type ToolSystem from '../tools/ToolSystem';
 import { Annotation } from './Annotation';
 import JSZip from 'jszip';
 import type { ConfigManager } from '../tools/config_manager';
-import {FastAverageColor, type FastAverageColorResult} from 'fast-average-color';
+import { FastAverageColor, type FastAverageColorResult } from 'fast-average-color';
 import rgbToLab from '@fantasy-color/rgb-to-lab'
 
 const hexToRgba = (hex: string, alpha: number = 1.0) => {
@@ -57,7 +57,7 @@ const Canvas: React.FC<CanvasProps> = (props) => {
         // Create new zip folder to store all data
         const zip = new JSZip();
         const imagesFolder = zip.folder('images');
-        const annotationsData: { annotation: Annotation; imageUrl: string }[] = [];
+        const annotationsData: { annotation: any; imageUrl: string }[] = [];
 
         const annots = Object.values(toolSystem?.annotations?.[currentImageId] || []);
         for (const annotation of annots) {
@@ -93,14 +93,14 @@ const Canvas: React.FC<CanvasProps> = (props) => {
                     // Gets the average color and adds to annotation
                     const url = URL.createObjectURL(blob);
                     const fac = new FastAverageColor();
-                    fac.getColorAsync(url, {algorithm: 'dominant'})
+                    fac.getColorAsync(url, { algorithm: 'dominant' })
                         .then((color: FastAverageColorResult) => {
                             console.log('Average color', color.rgb)
                             const color_string = color.rgb.split(/[,()]/);
                             const red = parseFloat(color_string[1]);
                             const green = parseFloat(color_string[2]);
                             const blue = parseFloat(color_string[3]);
-                            const lab = rgbToLab({red, green, blue})
+                            const lab = rgbToLab({ red, green, blue })
                             annotation.tile_data.ColorL = lab.luminance;
                             annotation.tile_data.ColorA = lab.a;
                             annotation.tile_data.ColorB = lab.b;
@@ -109,8 +109,8 @@ const Canvas: React.FC<CanvasProps> = (props) => {
 
                     // Add annotation data to JSON
                     annotationsData.push({
-                        annotation: annotation,
-                        imageUrl: `images/${fileName}`,
+                        annotation: annotation.getData(),
+                        imageUrl: `images/${fileName}`
                     });
                 }
             }

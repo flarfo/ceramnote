@@ -61,13 +61,10 @@ export class Annotation {
     //       onHandleClicked => set "currentHandle", call "currentTool.onHandleClicked"
 
     // Save/export logic placeholder
-    /*save(blob: Blob) {
+    getData() {
         return {
             id: this.id,
-            type: this.type,
-            color: this.color,
-            bounds: this.bounds,
-            associations: this.associations
+            ...this.tile_data
         };
-    }*/
+    }
 };
