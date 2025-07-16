@@ -10,9 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fantasy-color/rgb-to-lab": "^2.1.0",
     "@radix-ui/react-checkbox": "^1.3.2",
     "@radix-ui/react-icons": "^1.3.2",
     "@tailwindcss/vite": "^4.1.10",
+    "fast-average-color": "^9.5.0",
     "jszip": "^3.10.1",
     "onnxruntime-web": "^1.22.0",
     "radix-ui": "^1.4.2",

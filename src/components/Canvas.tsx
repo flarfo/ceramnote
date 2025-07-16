@@ -3,6 +3,8 @@ import type ToolSystem from '../tools/ToolSystem';
 import { Annotation } from './Annotation';
 import JSZip from 'jszip';
 import type { ConfigManager } from '../tools/config_manager';
+import {FastAverageColor, type FastAverageColorResult} from 'fast-average-color';
+import rgbToLab from '@fantasy-color/rgb-to-lab'
 
 const hexToRgba = (hex: string, alpha: number = 1.0) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -21,7 +23,7 @@ interface CanvasProps {
     toolSystem: ToolSystem;
     configManager: ConfigManager;
     viewport: { x: number, y: number, scale: number };
-};
+}
 
 /**
  * Canvas component for rendering image and annotations.
@@ -88,6 +90,23 @@ const Canvas: React.FC<CanvasProps> = (props) => {
                     const fileName = `${annotation.id}.jpg`;
                     imagesFolder?.file(fileName, blob);
 
+                    // Gets the average color and adds to annotation
+                    const url = URL.createObjectURL(blob);
+                    const fac = new FastAverageColor();
+                    fac.getColorAsync(url, {algorithm: 'dominant'})
+                        .then((color: FastAverageColorResult) => {
+                            console.log('Average color', color.rgb)
+                            const color_string = color.rgb.split(/[,()]/);
+                            const red = parseFloat(color_string[1]);
+                            const green = parseFloat(color_string[2]);
+                            const blue = parseFloat(color_string[3]);
+                            const lab = rgbToLab({red, green, blue})
+                            annotation.tile_data.ColorL = lab.luminance;
+                            annotation.tile_data.ColorA = lab.a;
+                            annotation.tile_data.ColorB = lab.b;
+                        });
+
+
                     // Add annotation data to JSON
                     annotationsData.push({
                         annotation: annotation,
@@ -95,7 +114,7 @@ const Canvas: React.FC<CanvasProps> = (props) => {
                     });
                 }
             }
-        };
+        }
 
         // Add the JSON file to the ZIP
         zip.file('annotations.json', JSON.stringify(annotationsData, null, 2));
