@@ -21,7 +21,6 @@ export class Annotation {
         'SurfaceCondition': ''
     };
     bounds: {x: number, y: number}[];
-
     // Inspector Arguments; these are automatically processed by the Inspector component to display
     //      and modify the annotation.
     inspectorArgs: string[] = [

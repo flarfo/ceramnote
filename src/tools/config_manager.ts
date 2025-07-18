@@ -10,7 +10,7 @@ export interface AppConfig {
 
 export const DEFAULT_CONFIG: AppConfig = {
     classNames: {
-        'Tile': '#32CD32',
+        'tile': '#32CD32',
     },
     keybinds: {
         'r': 'Rectangle',
@@ -18,7 +18,7 @@ export const DEFAULT_CONFIG: AppConfig = {
         'w': 'Selector'
     },
     defaults: {
-        annotationColor: '#FF0000',
+        annotationColor: '#32CD32',
         annotationOpacity: 0.7,
         strokeWidth: 2,
     }
