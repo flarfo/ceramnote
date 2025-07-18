@@ -78,11 +78,43 @@ function App() {
 		};
 
 		const handleGlobalKeyUp = (e: globalThis.KeyboardEvent) => {
-			if (e.key === 'ArrowRight') {
-				handleImageNavigation(1);
+			const activeElement = document.activeElement;
+			const isTyping = activeElement && (
+				activeElement.tagName === 'INPUT' ||
+				activeElement.tagName === 'TEXTAREA' ||
+				activeElement.getAttribute('contenteditable') === 'true'
+			);
+
+			if (isTyping) {
+				// Avoid navigation when typing
+				return;
 			}
-			else if (e.key === 'ArrowLeft') {
-				handleImageNavigation(-1);
+
+			// Check if Ctrl key is held for image navigation
+			if (e.ctrlKey) {
+				if (e.key === 'ArrowRight') {
+					handleImageNavigation(1);
+				}
+				else if (e.key === 'ArrowLeft') {
+					handleImageNavigation(-1);
+				}
+			} else if (toolSystem) {
+				// Arrow keys without Ctrl navigate annotations
+				if (e.key === 'ArrowUp') {
+					toolSystem.navigateAnnotationGrid('up');
+				}
+				else if (e.key === 'ArrowDown') {
+					toolSystem.navigateAnnotationGrid('down');
+				}
+				else if (e.key === 'ArrowLeft') {
+					toolSystem.navigateAnnotationGrid('left');
+				}
+				else if (e.key === 'ArrowRight') {
+					toolSystem.navigateAnnotationGrid('right');
+				}
+				else if (e.key === 'Delete') { 
+					toolSystem.removeAnnotation(toolSystem.selectedAnnotationIDs[0])
+				}
 			}
 		};
 
@@ -153,6 +185,15 @@ function App() {
 			img.onerror = null;
 		};
 	}, [imageFiles, currentImageIndex]);
+
+	const uploadImages = (images: FileList) => {
+		if (toolSystem) {
+			toolSystem.annotations = {};
+		}
+
+		setCurrentImageIndex(0);
+		setImageFiles(images);
+	}
 
 	/**
 	 * Load all newly selected models.
@@ -372,7 +413,7 @@ function App() {
 	return (
 		<div className='flex-col flex'>
 			<Filebar
-				setImageFiles={setImageFiles}
+				setImageFiles={uploadImages}
 				configManager={configManagerRef.current}
 				toolSystem={toolSystemRef.current}
 				currentAnnotationClass={currentAnnotationClass}
