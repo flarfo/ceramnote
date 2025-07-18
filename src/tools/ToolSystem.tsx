@@ -25,6 +25,8 @@ export class ToolSystem {
     toolConfig: { [key: string]: any } = {};
     currentImageIndex: number = 0;
     currentAnnotationClass: string = '';
+    annotationGrid: Annotation[][] = [];
+    gridPosition: { row: number, col: number } = { row: 0, col: 0 };
     viewport: { x: number, y: number, scale: number };
     setViewport: React.Dispatch<React.SetStateAction<{ x: number, y: number, scale: number }>>;
     setSelectedAnnotationIDs: React.Dispatch<React.SetStateAction<string[]>>;
@@ -124,15 +126,208 @@ export class ToolSystem {
         }
 
         this.annotations[this.currentImageIndex][annotation.id] = annotation;
+
+        // Rebuild the grid after adding annotation
+        this.buildAnnotationGrid();
     }
 
-    removeAnnotation(annotation: Annotation) {
-        delete this.annotations[this.currentImageIndex][annotation.id];
+    removeAnnotation(annotationID: string) {
+        delete this.annotations[this.currentImageIndex][annotationID];
+
+        // Rebuild the grid after removing annotation
+        this.buildAnnotationGrid();
+    }
+
+    /**
+     * Builds a 2D grid of annotations sorted by their Y positions (rows) and X positions (columns)
+     */
+    buildAnnotationGrid() {
+        const annotations = Object.values(this.annotations[this.currentImageIndex] || []);
+
+        if (annotations.length === 0) {
+            this.annotationGrid = [];
+            this.gridPosition = { row: 0, col: 0 };
+            return;
+        }
+
+        // Group annotations by approximate Y position
+        const rowThreshold = 50; // Pixels tolerance for same row
+        const rows: { y: number, annotations: Annotation[] }[] = [];
+
+        annotations.forEach(annotation => {
+            if (!annotation.bounds || annotation.bounds.length < 2) return;
+
+            const centerY = (annotation.bounds[0].y + annotation.bounds[1].y) / 2;
+
+            // Find existing row or create new one
+            let targetRow = rows.find(row => Math.abs(row.y - centerY) <= rowThreshold);
+
+            if (!targetRow) {
+                targetRow = { y: centerY, annotations: [] };
+                rows.push(targetRow);
+            }
+
+            targetRow.annotations.push(annotation);
+        });
+
+        // Sort rows by Y position (top to bottom)
+        rows.sort((a, b) => a.y - b.y);
+
+        // Sort annotations within each row by X position (left to right)
+        rows.forEach(row => {
+            row.annotations.sort((a, b) => {
+                const centerXA = (a.bounds[0].x + a.bounds[1].x) / 2;
+                const centerXB = (b.bounds[0].x + b.bounds[1].x) / 2;
+                return centerXA - centerXB;
+            });
+        });
+
+        // Build the 2D grid
+        this.annotationGrid = rows.map(row => row.annotations);
+
+        // Reset grid position if current position is invalid
+        if (this.gridPosition.row >= this.annotationGrid.length) {
+            this.gridPosition.row = Math.max(0, this.annotationGrid.length - 1);
+        }
+        if (this.annotationGrid.length > 0 && this.gridPosition.col >= this.annotationGrid[this.gridPosition.row].length) {
+            this.gridPosition.col = Math.max(0, this.annotationGrid[this.gridPosition.row].length - 1);
+        }
+
+        // If there are annotations but none selected, select the first one
+        if (this.annotationGrid.length > 0 && this.selectedAnnotationIDs.length === 0) {
+            this.gridPosition = { row: 0, col: 0 };
+            this.selectAnnotationAtGridPosition();
+        }
+    }
+
+    /**
+     * Navigate the annotation grid with arrow keys
+     * @param direction 'up' | 'down' | 'left' | 'right'
+     */
+    navigateAnnotationGrid(direction: 'up' | 'down' | 'left' | 'right') {
+        if (this.annotationGrid.length === 0) return;
+
+        const currentRow = this.gridPosition.row;
+        const currentCol = this.gridPosition.col;
+
+        switch (direction) {
+            case 'up':
+                if (currentRow > 0) {
+                    const newRow = currentRow - 1;
+
+                    // Get X position of current annotation
+                    const currentAnnotation = this.annotationGrid[currentRow][currentCol];
+                    const currentX = (currentAnnotation.bounds[0].x + currentAnnotation.bounds[1].x) / 2;
+
+                    // Find closest annotation in the new row
+                    let closestCol = 0;
+                    let closestDistance = Number.MAX_VALUE;
+
+                    for (let i = 0; i < this.annotationGrid[newRow].length; i++) {
+                        const annotation = this.annotationGrid[newRow][i];
+                        const annotationX = (annotation.bounds[0].x + annotation.bounds[1].x) / 2;
+                        const distance = Math.abs(currentX - annotationX);
+
+                        if (distance < closestDistance) {
+                            closestDistance = distance;
+                            closestCol = i;
+                        }
+                    }
+
+                    this.gridPosition = {
+                        row: newRow,
+                        col: closestCol
+                    };
+                }
+                break;
+            case 'down':
+                if (currentRow < this.annotationGrid.length - 1) {
+                    const newRow = currentRow + 1;
+
+                    // Get X position of current annotation
+                    const currentAnnotation = this.annotationGrid[currentRow][currentCol];
+                    const currentX = (currentAnnotation.bounds[0].x + currentAnnotation.bounds[1].x) / 2;
+
+                    // Find closest annotation in the new row
+                    let closestCol = 0;
+                    let closestDistance = Number.MAX_VALUE;
+
+                    for (let i = 0; i < this.annotationGrid[newRow].length; i++) {
+                        const annotation = this.annotationGrid[newRow][i];
+                        const annotationX = (annotation.bounds[0].x + annotation.bounds[1].x) / 2;
+                        const distance = Math.abs(currentX - annotationX);
+
+                        if (distance < closestDistance) {
+                            closestDistance = distance;
+                            closestCol = i;
+                        }
+                    }
+
+                    this.gridPosition = {
+                        row: newRow,
+                        col: closestCol
+                    };
+                }
+                break;
+            case 'left':
+                if (currentCol > 0) {
+                    this.gridPosition = {
+                        row: currentRow,
+                        col: currentCol - 1
+                    };
+                }
+                break;
+            case 'right':
+                if (currentCol < this.annotationGrid[currentRow].length - 1) {
+                    this.gridPosition = {
+                        row: currentRow,
+                        col: currentCol + 1
+                    };
+                }
+                break;
+        }
+
+        // Select the annotation at the new position
+        this.selectAnnotationAtGridPosition();
+    }
+
+    /**
+     * Selects the annotation at the current grid position
+     */
+    selectAnnotationAtGridPosition() {
+        if (this.annotationGrid.length === 0 ||
+            this.gridPosition.row >= this.annotationGrid.length ||
+            this.gridPosition.col >= this.annotationGrid[this.gridPosition.row].length) {
+            return;
+        }
+
+        const annotation = this.annotationGrid[this.gridPosition.row][this.gridPosition.col];
+        this.selectAnnotations([annotation.id]);
+    }
+
+    /**
+     * Updates the grid position to match the selected annotation
+     * @param annotationId The ID of the selected annotation
+     */
+    updateGridPositionForSelectedAnnotation(annotationId: string) {
+        for (let row = 0; row < this.annotationGrid.length; row++) {
+            for (let col = 0; col < this.annotationGrid[row].length; col++) {
+                if (this.annotationGrid[row][col].id === annotationId) {
+                    this.gridPosition = { row, col };
+                    return;
+                }
+            }
+        }
     }
 
     selectAnnotations(annotationIDs: string[]) {
         this.selectedAnnotationIDs = annotationIDs;
         this.setSelectedAnnotationIDs(annotationIDs);
+
+        // Update grid position to match the newly selected annotation
+        if (annotationIDs.length === 1) {
+            this.updateGridPositionForSelectedAnnotation(annotationIDs[0]);
+        }
     }
 
     /**
@@ -148,6 +343,9 @@ export class ToolSystem {
         this.selectedAnnotationIDs = [];
         this.setSelectedAnnotationIDs([]);
         this.selectedHandle = null;
+
+        // Rebuild the grid for the new image
+        this.buildAnnotationGrid();
     }
 
     // EVENT DISPATCHERS
