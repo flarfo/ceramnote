@@ -13,7 +13,7 @@ import type ToolSystem from '../tools/ToolSystem';
 const CHECK_ITEMS = ['Always Show Bookmarks Bar', 'Always Show Full URLs'];
 
 interface FilebarProps {
-	setImageFiles: React.Dispatch<React.SetStateAction<FileList | null>>;
+	setImageFiles: (images: FileList) => void;
 	configManager: ConfigManager | null;
 	toolSystem: ToolSystem | null;
 	currentAnnotationClass: string;
