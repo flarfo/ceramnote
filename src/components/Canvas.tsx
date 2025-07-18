@@ -1,10 +1,7 @@
 import { useRef, useEffect, useState } from 'react';
 import type ToolSystem from '../tools/ToolSystem';
 import { Annotation } from './Annotation';
-import JSZip from 'jszip';
 import type { ConfigManager } from '../tools/config_manager';
-import { FastAverageColor, type FastAverageColorResult } from 'fast-average-color';
-import rgbToLab from '@fantasy-color/rgb-to-lab'
 
 const hexToRgba = (hex: string, alpha: number = 1.0) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -17,8 +14,8 @@ const hexToInverseRgba = (hex: string, alpha: number = 1.0) => {
 }
 
 interface CanvasProps {
-    image: HTMLImageElement;
-    currentImageId: string;
+    image: HTMLImageElement | null;
+    currentImageIndex: number;
     backgroundColor: string;
     toolSystem: ToolSystem;
     configManager: ConfigManager;
@@ -30,7 +27,7 @@ interface CanvasProps {
  * Handles drawing, event detection, and exporting annotations.
  */
 const Canvas: React.FC<CanvasProps> = (props) => {
-    const { image, currentImageId, backgroundColor, toolSystem, configManager, viewport } = props;
+    const { image, currentImageIndex, backgroundColor, toolSystem, configManager, viewport } = props;
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
     const canvasSize = {
@@ -43,91 +40,6 @@ const Canvas: React.FC<CanvasProps> = (props) => {
     const canvasHeight = canvasSize.y * devicePixelRatio;
 
     const [mousePos, setMousePos] = useState<{ x: number, y: number } | null>(null);
-
-    /**
-     * Saves all images to annotations.zip/images and all annotations to annotations.zip/annotations.json.
-     * Save code found in Annotation.save() [<-- TO IMPLEMENT]
-     */
-    const save = async () => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const context = canvas.getContext('2d');
-        if (!context) return;
-
-        // Create new zip folder to store all data
-        const zip = new JSZip();
-        const imagesFolder = zip.folder('images');
-        const annotationsData: { annotation: any; imageUrl: string }[] = [];
-
-        const annots = Object.values(toolSystem?.annotations?.[currentImageId] || []);
-        for (const annotation of annots) {
-            // TODO: Move save function to the object itself
-            if (annotation.bounds && annotation.bounds.length === 2) {
-                const [start, end] = annotation.bounds;
-
-                // Calculate crop dimensions
-                const x = Math.min(start.x, end.x);
-                const y = Math.min(start.y, end.y);
-                const width = Math.abs(end.x - start.x);
-                const height = Math.abs(end.y - start.y);
-
-                // Create a temporary canvas for the crop
-                const cropCanvas = document.createElement('canvas');
-                cropCanvas.width = width;
-                cropCanvas.height = height;
-
-                const cropContext = cropCanvas.getContext('2d');
-                if (!cropContext) return;
-
-                // Draw the cropped image onto temp canvas
-                cropContext.drawImage(image, x, y, width, height, 0, 0, width, height);
-
-                // Get cropped image URL
-                // NOTE: blob MIME type MUST match original image MIME type, or size is MASSIVELY inflated (~5x)
-                // TODO: track MIME type of original image so multiple filetypes are supported
-                const blob = await new Promise<Blob | null>((resolve) => cropCanvas.toBlob(resolve, 'image/jpeg', 0.95));
-                if (blob) {
-                    const fileName = `${annotation.id}.jpg`;
-                    imagesFolder?.file(fileName, blob);
-
-                    // Gets the average color and adds to annotation
-                    const url = URL.createObjectURL(blob);
-                    const fac = new FastAverageColor();
-                    fac.getColorAsync(url, { algorithm: 'dominant' })
-                        .then((color: FastAverageColorResult) => {
-                            console.log('Average color', color.rgb)
-                            const color_string = color.rgb.split(/[,()]/);
-                            const red = parseFloat(color_string[1]);
-                            const green = parseFloat(color_string[2]);
-                            const blue = parseFloat(color_string[3]);
-                            const lab = rgbToLab({ red, green, blue })
-                            annotation.tile_data.ColorL = lab.luminance;
-                            annotation.tile_data.ColorA = lab.a;
-                            annotation.tile_data.ColorB = lab.b;
-                        });
-
-
-                    // Add annotation data to JSON
-                    annotationsData.push({
-                        annotation: annotation.getData(),
-                        imageUrl: `images/${fileName}`
-                    });
-                }
-            }
-        }
-
-        // Add the JSON file to the ZIP
-        zip.file('annotations.json', JSON.stringify(annotationsData, null, 2));
-
-        // Generate the ZIP file and trigger download
-        const zipBlob = await zip.generateAsync({ type: 'blob' });
-        const zipUrl = URL.createObjectURL(zipBlob);
-        const a = document.createElement('a');
-        a.href = zipUrl;
-        a.download = 'annotations.zip';
-        a.click();
-        URL.revokeObjectURL(zipUrl);
-    };
 
     // Draw all annotations
     const draw = (ctx: CanvasRenderingContext2D) => {
@@ -162,7 +74,7 @@ const Canvas: React.FC<CanvasProps> = (props) => {
             ctx.stroke();
         }
 
-        const annots = Object.values(toolSystem?.annotations?.[currentImageId] || []);
+        const annots = Object.values(toolSystem?.annotations?.[currentImageIndex] || []);
         annots.forEach((annot: Annotation) => {
             // Draw rectangle annotations for the current image
             if (annot.type === 'rectangle' && annot.bounds && annot.bounds.length === 2) {
@@ -199,19 +111,6 @@ const Canvas: React.FC<CanvasProps> = (props) => {
 
                     ctx.lineWidth = 30;
                     ctx.fillStyle = hexToInverseRgba(baseColor, 0.9);
-                    // Draw associations (line from selected annotation to associated annotation)
-                    annot.associations.forEach((association: Annotation) => {
-                        const [aStart, aEnd] = association.bounds;
-                        const aX = Math.min(aStart.x, aEnd.x);
-                        const aY = Math.min(aStart.y, aEnd.y);
-                        const aW = Math.abs(aEnd.x - aStart.x);
-                        const aH = Math.abs(aEnd.y - aStart.y);
-
-                        ctx.beginPath();
-                        ctx.moveTo(x + w / 2, y + h / 2);
-                        ctx.lineTo(aX + aW / 2, aY + aH / 2);
-                        ctx.stroke();
-                    });
                 }
 
                 ctx.restore();
@@ -325,10 +224,6 @@ const Canvas: React.FC<CanvasProps> = (props) => {
                 toolSystem.handleKeyDown(e);
             }}
             onKeyUp={(e) => {
-                if (e.key === ' ') {
-                    save();
-                }
-
                 toolSystem.handleKeyDown(e);
             }}
             onMouseLeave={(e) => {

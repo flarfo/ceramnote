@@ -136,7 +136,7 @@ export const Inspector = ({
     const [_, setVersion] = useState(0);
 
     const handleFieldChange = (path: (string|number)[], value: any) => {
-        const ann = toolSystem.annotations[toolSystem.currentImageId][selectedAnnotationIDs[0]];
+        const ann = toolSystem.annotations[toolSystem.currentImageIndex][selectedAnnotationIDs[0]];
         setNestedValue(ann, path, value);
         setVersion(v => v + 1); // Force re-render
     };
@@ -157,17 +157,17 @@ export const Inspector = ({
                         <div className="px-1">
                             {selectedAnnotationIDs.length === 1 ? (
                                 <>
-                                    {toolSystem.annotations[toolSystem.currentImageId][selectedAnnotationIDs[0]] != null ? (
+                                    {toolSystem.annotations[toolSystem.currentImageIndex][selectedAnnotationIDs[0]] != null ? (
                                         <div className="space-y-4">
-                                            {toolSystem.annotations[toolSystem.currentImageId][selectedAnnotationIDs[0]].inspectorArgs.map((key: string, index: number) => (
+                                            {toolSystem.annotations[toolSystem.currentImageIndex][selectedAnnotationIDs[0]].inspectorArgs.map((key: string, index: number) => (
                                                 <div key={index} className="space-y-2">
                                                     <Label.Root className="text-xs font-semibold text-[var(--color-light)] block tracking-wide">
                                                         {key}
                                                     </Label.Root>
                                                     <div>
-                                                        {getInspectorField([key], toolSystem.annotations[toolSystem.currentImageId][selectedAnnotationIDs[0]], handleFieldChange)}
+                                                        {getInspectorField([key], toolSystem.annotations[toolSystem.currentImageIndex][selectedAnnotationIDs[0]], handleFieldChange)}
                                                     </div>
-                                                    {index < toolSystem.annotations[toolSystem.currentImageId][selectedAnnotationIDs[0]].inspectorArgs.length - 1 && (
+                                                    {index < toolSystem.annotations[toolSystem.currentImageIndex][selectedAnnotationIDs[0]].inspectorArgs.length - 1 && (
                                                         <Separator.Root className="bg-[var(--color-medium-light)]/30 h-px w-full my-3" />
                                                     )}
                                                 </div>

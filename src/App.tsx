@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, type KeyboardEvent } from 'react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import Canvas from './components/Canvas';
 import ToolSystem from './tools/ToolSystem';
@@ -12,6 +12,9 @@ import { model_loader } from './onnx/model_loader';
 import { inference_pipeline } from './onnx/inference_pipeline';
 import type { InferenceSession } from 'onnxruntime-web/wasm';
 import { Annotation } from './components/Annotation';
+import { FastAverageColor, type FastAverageColorResult } from 'fast-average-color';
+import rgbToLab from '@fantasy-color/rgb-to-lab'
+import JSZip from 'jszip';
 
 /**
  * App component; base rendering point, handles cross-component state. 
@@ -21,6 +24,7 @@ function App() {
 	// TODO: allow user to switch to new image from list of all uploaded
 	const [imageFiles, setImageFiles] = useState<FileList | null>(null); // All image files (if multiple selected)
 	const [isImageLoaded, setIsImageLoaded] = useState(false);
+	const [isImageTransitioning, setIsImageTransitioning] = useState(false);
 	const [panelSize, setPanelSize] = useState(80);
 	const [selectedAnnotationIDs, setSelectedAnnotationIDs] = useState<string[]>([]);
 	const [config, setConfig] = useState<AppConfig>(DEFAULT_CONFIG);
@@ -31,7 +35,7 @@ function App() {
 	// TODO: add session config for each model, i.e. user can change confidence levels, id -> class mappings
 	const [availableModels, setAvailableModels] = useState<Record<string, string>>(
 		{
-			'tile_detector': '/models/tile_detector.onnx', 
+			'tile_detector': '/models/tile_detector.onnx',
 		}
 	);
 	const [selectedModels, setSelectedModels] = useState<string[]>([]);
@@ -42,16 +46,14 @@ function App() {
 	const [currentTool, setCurrentTool] = useState<ToolBase | null>(null);
 	const [currentAnnotationClass, setCurrentAnnotationClass] = useState<string>('');
 
-	const [currentImageId, setCurrentImageId] = useState('');
+	const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
 	// Initialize ConfigManager and ToolSystem after setViewport is available
 	useEffect(() => {
 		if (!configManagerRef.current) {
 			configManagerRef.current = new ConfigManager(DEFAULT_CONFIG, setConfig);
-			console.log(DEFAULT_CONFIG)
 			// Try to load saved config from localStorage
 			configManagerRef.current.loadFromStorage();
-			console.log(configManagerRef.current.getConfig());
 		}
 
 		if (!toolSystemRef.current) {
@@ -66,6 +68,43 @@ function App() {
 			setCurrentTool(toolSystemRef.current.currentTool);
 		}
 	}, [setViewport]);
+
+	// Global keyboard event handler
+	useEffect(() => {
+		const handleGlobalKeyDown = (e: globalThis.KeyboardEvent) => {
+			if (e.key === ' ') {
+				handlePrepocessors();
+			}
+		};
+
+		const handleGlobalKeyUp = (e: globalThis.KeyboardEvent) => {
+			if (e.key === 'ArrowRight') {
+				handleImageNavigation(1);
+			}
+			else if (e.key === 'ArrowLeft') {
+				handleImageNavigation(-1);
+			}
+		};
+
+		// Add event listeners to document
+		document.addEventListener('keydown', handleGlobalKeyDown);
+		document.addEventListener('keyup', handleGlobalKeyUp);
+
+		// Cleanup event listeners on unmount
+		return () => {
+			document.removeEventListener('keydown', handleGlobalKeyDown);
+			document.removeEventListener('keyup', handleGlobalKeyUp);
+		};
+	}, [imageFiles, currentImageIndex, isImageTransitioning]);
+
+	const handleImageNavigation = (num: number) => {
+		if (!imageFiles?.length) return;
+
+		const newIndex = currentImageIndex + num;
+		if (newIndex < 0 || newIndex > imageFiles.length - 1) return;
+		setIsImageTransitioning(true);
+		setCurrentImageIndex(prev => prev + num);
+	};
 
 	useEffect(() => {
 		if (toolSystemRef.current) {
@@ -84,8 +123,8 @@ function App() {
 	const configManager = configManagerRef.current;
 
 	// Set the current image in toolSystem when loaded
+	// TODO: fix wonky state management
 	useEffect(() => {
-		console.log('Called');
 		if (imageFiles === null) {
 			return;
 		}
@@ -95,23 +134,25 @@ function App() {
 			setImage(img);
 			setIsImageLoaded(true);
 
-			// TODO: make state bettererer
-			setCurrentImageId(img.src);
+			// Update toolSystem with the current image index
 			if (toolSystem) {
-				toolSystem.currentImageId = img.src;
+				toolSystem.setCurrentImage(currentImageIndex);
 			}
+
+			// Clear the transitioning state after everything is set up
+			setIsImageTransitioning(false);
 		};
 		img.onerror = () => {
 			console.error("Failed to load image.");
 		};
 
-		img.src = URL.createObjectURL(imageFiles[0])
+		img.src = URL.createObjectURL(imageFiles[currentImageIndex])
 
 		return () => {
 			img.onload = null;
 			img.onerror = null;
 		};
-	}, [imageFiles]);
+	}, [imageFiles, currentImageIndex]);
 
 	/**
 	 * Load all newly selected models.
@@ -121,7 +162,7 @@ function App() {
 		// Load newly selected models
 		console.log(availableModels);
 		for (let i = 0; i < models.length; i++) {
-			const modelName= models[i];
+			const modelName = models[i];
 			// If already loaded, ignore
 			if (!loadedModels[modelName]) {
 				const modelPath = availableModels[modelName];
@@ -155,10 +196,10 @@ function App() {
 	 */
 	const handleCustomModelUpload = (file: File) => {
 		const customModelName = `Custom: ${file.name}`;
-		
+
 		setAvailableModels(prev => ({
-			...prev, 
-			[customModelName]: URL.createObjectURL(file) 
+			...prev,
+			[customModelName]: URL.createObjectURL(file)
 		}));
 
 		// NOTE: doesn't properly pass state, since availableModels isn't updated immediately.
@@ -173,15 +214,13 @@ function App() {
 	const handlePrepocessors = async () => {
 		// TODO: preload model on select
 		// TODO: prevent multiple cnn inference passes on single image
-		if (!image || !configManager) return;
+		if (!image || !configManager || isImageTransitioning) return;
+
 
 		for (let i = 0; i < selectedModels.length; i++) {
 			const model = loadedModels[selectedModels[i]];
 			if (!model) continue;
 			const [results, time] = await inference_pipeline(image, { yolo_model: model });
-
-			console.log('Time:', time);
-			console.log(results);
 
 			// Create new annotation
 			for (const result of results) {
@@ -194,7 +233,7 @@ function App() {
 
 	useEffect(() => {
 		if (image && toolSystem) {
-			toolSystem.setCurrentImage(currentImageId);
+			toolSystem.setCurrentImage(currentImageIndex);
 
 			const canvasWidth = window.innerWidth;
 			const canvasHeight = window.innerHeight;
@@ -219,6 +258,117 @@ function App() {
 		}
 	};
 
+	const exportCurrentAnnotations = () => exportAnnotations(true);
+	const exportAllAnnotations = () => exportAnnotations(false);
+
+	/**
+ 	* Saves all images to annotations.zip/images and all annotations to annotations.zip/annotations.json.
+	* Save code found in Annotation.save() [<-- TO IMPLEMENT]
+	*/
+	const exportAnnotations = async (onlyCurrent: boolean) => {
+		if (!imageFiles || !toolSystem) return;
+
+		// Create new zip folder to store all data
+		const zip = new JSZip();
+		const imagesFolder = zip.folder('images');
+		const annotationsData: { annotation: any; imageUrl: string }[] = [];
+
+		// Get current index starting point 
+		const iterations = onlyCurrent ? 1 : imageFiles.length;
+		const startIndex = onlyCurrent ? currentImageIndex : 0;
+
+		for (let i = startIndex; i < (onlyCurrent ? startIndex + 1 : iterations); i++) {
+			// Load the image for this iteration if it's not the current one
+			let imageToProcess = image;
+			if (!onlyCurrent && i !== currentImageIndex) {
+				// Create a temporary image for non-current images
+				imageToProcess = await new Promise<HTMLImageElement>((resolve, reject) => {
+					const tempImg = new Image();
+					tempImg.onload = () => resolve(tempImg);
+					tempImg.onerror = reject;
+					tempImg.src = URL.createObjectURL(imageFiles[i]);
+				});
+			}
+
+			if (!imageToProcess) continue;
+
+			const annots = Object.values(toolSystem.annotations[i] || []);
+			for (const annotation of annots) {
+				// TODO: Move save function to the object itself ?
+				if (annotation.bounds && annotation.bounds.length === 2) {
+					const [start, end] = annotation.bounds;
+
+					// Calculate crop dimensions
+					const x = Math.min(start.x, end.x);
+					const y = Math.min(start.y, end.y);
+					const width = Math.abs(end.x - start.x);
+					const height = Math.abs(end.y - start.y);
+
+					// Create a temporary canvas for the crop
+					const cropCanvas = document.createElement('canvas');
+					cropCanvas.width = width;
+					cropCanvas.height = height;
+
+					const cropContext = cropCanvas.getContext('2d');
+					if (!cropContext) continue;
+
+					// Draw the cropped image onto temp canvas
+					cropContext.drawImage(imageToProcess, x, y, width, height, 0, 0, width, height);
+
+					// Get cropped image URL
+					// NOTE: blob MIME type MUST match original image MIME type, or size is MASSIVELY inflated (~5x)
+					// TODO: track MIME type of original image so multiple filetypes are supported
+					const blob = await new Promise<Blob | null>((resolve) => cropCanvas.toBlob(resolve, 'image/jpeg', 0.95));
+					if (blob) {
+						const fileName = `${annotation.id}.jpg`;
+						imagesFolder?.file(fileName, blob);
+
+						// Gets the average color and adds to annotation
+						const url = URL.createObjectURL(blob);
+						const fac = new FastAverageColor();
+
+						// Wait for color calculation to complete before proceeding
+						try {
+							const color: FastAverageColorResult = await fac.getColorAsync(url, { algorithm: 'dominant' });
+							const color_string = color.rgb.split(/[,()]/);
+							const red = parseFloat(color_string[1]);
+							const green = parseFloat(color_string[2]);
+							const blue = parseFloat(color_string[3]);
+							const lab = rgbToLab({ red, green, blue });
+							annotation.tile_data.ColorL = lab.luminance;
+							annotation.tile_data.ColorA = lab.a;
+							annotation.tile_data.ColorB = lab.b;
+						}
+						catch (error) {
+							console.error('Error calculating color:', error);
+						}
+
+						// Clean up the blob URL
+						URL.revokeObjectURL(url);
+
+						// Add annotation data to JSON
+						annotationsData.push({
+							annotation: annotation.getData(),
+							imageUrl: `images/${fileName}`
+						});
+					}
+				}
+			}
+		}
+
+		// Add the JSON file to the ZIP
+		zip.file('annotations.json', JSON.stringify(annotationsData, null, 2));
+
+		// Generate the ZIP file and trigger download
+		const zipBlob = await zip.generateAsync({ type: 'blob' });
+		const zipUrl = URL.createObjectURL(zipBlob);
+		const a = document.createElement('a');
+		a.href = zipUrl;
+		a.download = 'annotations.zip';
+		a.click();
+		URL.revokeObjectURL(zipUrl);
+	};
+
 	return (
 		<div className='flex-col flex'>
 			<Filebar
@@ -231,8 +381,12 @@ function App() {
 				onModelSelect={handleModelSelect}
 				onCustomModelUpload={handleCustomModelUpload}
 				onPreprocess={handlePrepocessors}
+				onExportAll={exportAllAnnotations}
+				onExportCurrent={exportCurrentAnnotations}
 			/>
-			<PanelGroup direction="horizontal" style={{ height: '100vh' }}>
+			<PanelGroup direction="horizontal" style={{ height: '100vh' }}
+
+			>
 				<Panel defaultSize={15} minSize={10} className='bg-(--color-medium)'>
 					{toolSystem && (
 						<>
@@ -262,16 +416,27 @@ function App() {
 						boxSizing: 'border-box',
 						background: '#fff'
 					}}>
-						{image && toolSystem && configManager &&
-							(<Canvas
+						{image && toolSystem && configManager && (!isImageTransitioning ? (
+							<Canvas
+								key={currentImageIndex} // Force re-render when image changes
 								image={image}
-								currentImageId={currentImageId}
+								currentImageIndex={currentImageIndex}
 								backgroundColor={'#3B3B3B'}
 								toolSystem={toolSystem}
 								configManager={configManager}
 								viewport={viewport}
 							/>
-							)}
+						) :
+							<Canvas
+								key={currentImageIndex}
+								image={null} // Render just the background
+								currentImageIndex={-1}
+								backgroundColor={'#3B3B3B'}
+								toolSystem={toolSystem}
+								configManager={configManager}
+								viewport={viewport}
+							/>
+						)}
 					</div>
 				</Panel>
 				<PanelResizeHandle style={{ width: '4px', background: '#ccc' }} />

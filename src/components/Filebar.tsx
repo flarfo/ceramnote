@@ -22,6 +22,8 @@ interface FilebarProps {
 	onModelSelect: (modelNames: string[]) => void;
 	onCustomModelUpload: (file: File) => void;
 	onPreprocess: () => void;
+	onExportAll: () => void;
+	onExportCurrent: () => void;
 }
 
 /**
@@ -36,7 +38,9 @@ const Filebar: React.FC<FilebarProps> = ({
 	selectedModels,
 	onModelSelect,
 	onCustomModelUpload,
-	onPreprocess
+	onPreprocess,
+	onExportAll,
+	onExportCurrent
 }) => {
 
 	const [checkedSelection, setCheckedSelection] = React.useState([
@@ -165,10 +169,15 @@ const Filebar: React.FC<FilebarProps> = ({
 									className='MenubarSubContent'
 									alignOffset={-5}
 								>
-									<Menubar.Item className='MenubarItem'>
-										Export All <div className='RightSlot'>CTRL + Shift + E</div>
+									<Menubar.Item className='MenubarItem'
+										onClick={onExportAll}
+									>
+										Export All <div className='RightSlot'
+										>CTRL + Shift + E</div>
 									</Menubar.Item>
-									<Menubar.Item className='MenubarItem'>
+									<Menubar.Item className='MenubarItem'
+										onClick={onExportCurrent}
+									>
 										Export Current <div className='RightSlot'>CTRL + Shift + I</div>
 									</Menubar.Item>
 								</Menubar.SubContent>
@@ -368,21 +377,9 @@ const Filebar: React.FC<FilebarProps> = ({
 										onChange={(e) => updateClassColor(item.id, e.target.value)}
 										className='ColorInput'
 									/>
-									<button
-										onClick={() => deleteClass(item.id)}
-										className='DeleteButton'
-									>
-										<Cross2Icon />
-									</button>
 								</div>
 							))}
 						</div>
-						<button
-							onClick={addClass}
-							className='AddButton'
-						>
-							Add Class
-						</button>
 						<div className='DialogActions'>
 							<Dialog.Close asChild>
 								<button className='Button green' onClick={handleSaveClasses}>Save</button>
