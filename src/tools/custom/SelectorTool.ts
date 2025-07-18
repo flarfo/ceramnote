@@ -29,7 +29,7 @@ class SelectorTool extends ToolBase {
     // LMB
     onMB0(position: {x: number, y: number}, canvasRect: DOMRect) {
         const selectedAnnotationsIDs = [];
-        const annotations = Object.values(this.toolSystem.annotations[this.toolSystem.currentImageId]);
+        const annotations = Object.values(this.toolSystem.annotations[this.toolSystem.currentImageIndex]);
 
         for (let i = 0; i < annotations.length; i++) {
             const annotation = annotations[i];

@@ -7,7 +7,6 @@ import { AnnotationHandle } from '../components/AnnotationHandle';
 import RectangleTool from './custom/RectangleTool';
 import PanTool from './custom/PanTool';
 import SelectorTool from './custom/SelectorTool';
-import AssociatorTool from './custom/AssociatorTool';
 import { TriangleRightIcon } from '@radix-ui/react-icons';
 import React from 'react';
 import { ConfigManager } from './config_manager';
@@ -19,12 +18,12 @@ import { ConfigManager } from './config_manager';
 export class ToolSystem {
     tools: ToolBase[] = [];
     currentTool: ToolBase | null = null;
-    annotations: { [imageId: string]: { [annotationId: string]: Annotation } } = {};
+    annotations: { [imageIndex: number]: { [annotationId: string]: Annotation } } = {};
     selectedAnnotationIDs: string[] = [];
     selectedHandle: AnnotationHandle | null = null;
     keybindMap: { [key: string]: string } = {};
     toolConfig: { [key: string]: any } = {};
-    currentImageId: string = '';
+    currentImageIndex: number = 0;
     currentAnnotationClass: string = '';
     viewport: { x: number, y: number, scale: number };
     setViewport: React.Dispatch<React.SetStateAction<{ x: number, y: number, scale: number }>>;
@@ -42,10 +41,9 @@ export class ToolSystem {
     ) {
         // Register tools
         this.tools = [
-            new RectangleTool(this),
             new PanTool(this),
             new SelectorTool(this),
-            new AssociatorTool(this),
+            new RectangleTool(this),
         ];
         this.setViewport = setViewport;
         this.setSelectedAnnotationIDs = setSelectedAnnotationIDs;
@@ -121,15 +119,15 @@ export class ToolSystem {
      * @param annotation Annotation to add
      */
     addAnnotation(annotation: Annotation) {
-        if (!this.annotations[this.currentImageId]) {
-            this.annotations[this.currentImageId] = {};
+        if (!this.annotations[this.currentImageIndex]) {
+            this.annotations[this.currentImageIndex] = {};
         }
 
-        this.annotations[this.currentImageId][annotation.id] = annotation;
+        this.annotations[this.currentImageIndex][annotation.id] = annotation;
     }
 
     removeAnnotation(annotation: Annotation) {
-        delete this.annotations[this.currentImageId][annotation.id];
+        delete this.annotations[this.currentImageIndex][annotation.id];
     }
 
     selectAnnotations(annotationIDs: string[]) {
@@ -139,15 +137,16 @@ export class ToolSystem {
 
     /**
      * Change currently loaded image (resets state, actual image handled in App.tsx)
-     * @param imageId 
+     * @param index Image index in the FileList
      */
-    setCurrentImage(imageId: string) {
-        this.currentImageId = imageId;
-        if (!this.annotations[imageId]) {
-            this.annotations[imageId] = {};
+    setCurrentImage(index: number) {
+        this.currentImageIndex = index;
+        if (!this.annotations[index]) {
+            this.annotations[index] = {};
         }
 
         this.selectedAnnotationIDs = [];
+        this.setSelectedAnnotationIDs([]);
         this.selectedHandle = null;
     }
 
