@@ -18,9 +18,9 @@ export class Annotation {
         'ChemicalComposition': '',
         'FiringType': '',
         'SoilType': '',
+        'SurfaceCondition': ''
     };
     bounds: {x: number, y: number}[];
-    associations: Annotation[] = [];
 
     // Inspector Arguments; these are automatically processed by the Inspector component to display
     //      and modify the annotation.
@@ -41,18 +41,6 @@ export class Annotation {
     static generateId() {
         return 'ann_' + Math.random().toString(36).slice(2, 9);
     };
-    
-    // Add association
-    addAssociation(annotation: Annotation) {
-        if (!this.associations.includes(annotation)) {
-            this.associations.push(annotation);
-        }
-    }
-
-    // Remove association
-    removeAssociation(annotation: Annotation) {
-        this.associations = this.associations.filter(cur => cur.id !== annotation.id);
-    }
 
     // NOTE: Logic for controlling the Annotation object should be handled by different tools.
     //       That way, new tools can be created with ease. Objects should expose events to the tools.
@@ -63,7 +51,6 @@ export class Annotation {
     // Save/export logic placeholder
     getData() {
         return {
-            id: this.id,
             ...this.tile_data
         };
     }
