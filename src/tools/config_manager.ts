@@ -10,7 +10,7 @@ export interface AppConfig {
 
 export const DEFAULT_CONFIG: AppConfig = {
     classNames: {
-        'Default': '#FF0000',
+        'Tile': '#32CD32',
     },
     keybinds: {
         'r': 'Rectangle',
@@ -52,20 +52,6 @@ export class ConfigManager {
     setClassNames(classNames: { [className: string]: string }): void {
         this.config.classNames = classNames;
         this.notifyUpdate();
-    }
-
-    addClass(className: string, color: string = '#FF0000'): void {
-        if (!this.config.classNames.hasOwnProperty(className)) {
-            this.config.classNames[className] = color;
-            this.notifyUpdate();
-        }
-    }
-
-    removeClass(className: string): void {
-        if (this.config.classNames.hasOwnProperty(className)) {
-            delete this.config.classNames[className];
-            this.notifyUpdate();
-        }
     }
 
     updateClassColor(className: string, color: string): void {
