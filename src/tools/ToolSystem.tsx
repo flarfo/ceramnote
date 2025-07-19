@@ -133,9 +133,17 @@ export class ToolSystem {
 
     removeAnnotation(annotationID: string) {
         delete this.annotations[this.currentImageIndex][annotationID];
-
+        this.setSelectedAnnotationIDs([]);
         // Rebuild the grid after removing annotation
         this.buildAnnotationGrid();
+    }
+
+    getAnnotation(annotationID: string) {
+        if (this.annotations[this.currentImageIndex][annotationID] !== null) {
+            return this.annotations[this.currentImageIndex][annotationID];
+        }
+
+        return null;
     }
 
     /**

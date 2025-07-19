@@ -8,11 +8,13 @@ export class Annotation {
     type: string;
     name: string;
     id: string;
-    tile_data: Record<string, string | number> = {
+    color: Record<string, string | number> = {
         'ColorName': '',
         'ColorL': 0,
         'ColorA': 0,
-        'ColorB': 0,
+        'ColorB': 0
+    };
+    tile_data: Record<string, string | number> = {
         'GlazeType': '',
         'FiringTemperature': 0,
         'ChemicalComposition': '',
@@ -24,6 +26,7 @@ export class Annotation {
     // Inspector Arguments; these are automatically processed by the Inspector component to display
     //      and modify the annotation.
     inspectorArgs: string[] = [
+        'color',
         'tile_data',
         'bounds',
     ];
@@ -39,6 +42,12 @@ export class Annotation {
     // Random ID used to index ToolSystem.annotations
     static generateId() {
         return 'ann_' + Math.random().toString(36).slice(2, 9);
+    };
+
+    static copyObject: Record<string, any> = {
+        color: {},
+        tile_data: {},
+        bounds: Array<{}>
     };
 
     // NOTE: Logic for controlling the Annotation object should be handled by different tools.

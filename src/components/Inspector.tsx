@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import ToolSystem from '../tools/ToolSystem';
 import { Annotation } from './Annotation';
+import { Collapsible } from 'radix-ui';
 import * as ScrollArea from '@radix-ui/react-scroll-area';
 import * as Label from '@radix-ui/react-label';
 import * as Separator from '@radix-ui/react-separator';
 import * as Checkbox from '@radix-ui/react-checkbox';
-import { CheckIcon } from '@radix-ui/react-icons';
+import { CheckIcon, CopyIcon, ClipboardIcon, ChevronDownIcon, ChevronUpIcon } from '@radix-ui/react-icons';
 
 // Helper to update nested value by path
 function setNestedValue(obj: any, path: (string | number)[], value: any) {
@@ -26,9 +27,11 @@ function setNestedValue(obj: any, path: (string | number)[], value: any) {
  */
 const getInspectorField = (
     path: (string | number)[],
-    annotation: Annotation,
+    annotation: Annotation | null,
     onChange: (path: (string | number)[], value: any) => void
 ) => {
+    if (!annotation) return;
+
     // Traverse to value
     let value: any = annotation;
     for (const key of path) value = value[key];
@@ -135,7 +138,7 @@ export const Inspector = ({
     // Dummy state to force re-render on change
     const [_, setVersion] = useState(0);
 
-    const handleFieldChange = (path: (string|number)[], value: any) => {
+    const handleFieldChange = (path: (string | number)[], value: any) => {
         const ann = toolSystem.annotations[toolSystem.currentImageIndex][selectedAnnotationIDs[0]];
         setNestedValue(ann, path, value);
         setVersion(v => v + 1); // Force re-render
@@ -150,27 +153,71 @@ export const Inspector = ({
             <div className="flex-shrink-0 px-3 py-2 border-b border-[var(--color-medium-light)]">
                 <h3 className="text-xs font-medium text-[var(--color-light)] uppercase tracking-wide">Inspector</h3>
             </div>
-            
+
             <div className="flex-1 min-h-0 m-2">
                 <ScrollArea.Root className="h-full">
                     <ScrollArea.Viewport className="w-full h-full">
                         <div className="px-1">
                             {selectedAnnotationIDs.length === 1 ? (
                                 <>
-                                    {toolSystem.annotations[toolSystem.currentImageIndex][selectedAnnotationIDs[0]] != null ? (
+                                    {toolSystem.getAnnotation(selectedAnnotationIDs[0]) ? (
                                         <div className="space-y-4">
-                                            {toolSystem.annotations[toolSystem.currentImageIndex][selectedAnnotationIDs[0]].inspectorArgs.map((key: string, index: number) => (
-                                                <div key={index} className="space-y-2">
-                                                    <Label.Root className="text-xs font-semibold text-[var(--color-light)] block tracking-wide">
-                                                        {key}
-                                                    </Label.Root>
-                                                    <div>
-                                                        {getInspectorField([key], toolSystem.annotations[toolSystem.currentImageIndex][selectedAnnotationIDs[0]], handleFieldChange)}
+                                            {toolSystem.getAnnotation(selectedAnnotationIDs[0])!.inspectorArgs.map((key: string, index: number) => (
+                                                <Collapsible.Root key={index} defaultOpen={true} className="space-y-2">
+                                                    <div className='flex items-center gap-2'>
+
+                                                    <Collapsible.Trigger className="group text-xs font-semibold text-[var(--color-light)] flex items-center justify-between tracking-wide hover:bg-[var(--color-medium-light)]/20 px-2 py-1 rounded transition-colors">
+                                                        <ChevronDownIcon
+                                                            width={14}
+                                                            height={14}
+                                                            className="transform transition-transform duration-300 group-data-[state=closed]:-rotate-90"
+                                                        />
+                                                    </Collapsible.Trigger>
+                                                        <span>{key}</span>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                // Copy button
+                                                                const annotation = toolSystem.getAnnotation(selectedAnnotationIDs[0]);
+
+                                                                if (Annotation.copyObject.hasOwnProperty(key) && annotation?.hasOwnProperty(key)) {
+                                                                    if (annotation) {
+                                                                        Annotation.copyObject[key] = annotation[key];
+                                                                    }
+                                                                }
+                                                            }}
+                                                            className="opacity-50 hover:opacity-100 transition-opacity p-1 rounded hover:bg-[var(--color-medium-light)]"
+                                                            title={`Copy ${key}`}
+                                                        >
+                                                            <CopyIcon width={12} height={12} />
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                // Paste button
+                                                                const annotation = toolSystem.getAnnotation(selectedAnnotationIDs[0]);
+
+                                                                if (Annotation.copyObject.hasOwnProperty(key) && annotation?.hasOwnProperty(key)) {
+                                                                    if (annotation) {
+                                                                        annotation[key] = Annotation.copyObject[key];
+                                                                        setVersion(v => v + 1);
+                                                                    }
+                                                                }
+                                                            }}
+                                                            className="opacity-50 hover:opacity-100 transition-opacity p-1 rounded hover:bg-[var(--color-medium-light)]"
+                                                            title={`Paste ${key}`}
+                                                        >
+                                                            <ClipboardIcon width={12} height={12} />
+                                                        </button>
                                                     </div>
-                                                    {index < toolSystem.annotations[toolSystem.currentImageIndex][selectedAnnotationIDs[0]].inspectorArgs.length - 1 && (
-                                                        <Separator.Root className="bg-[var(--color-medium-light)]/30 h-px w-full my-3" />
-                                                    )}
-                                                </div>
+
+                                                    <Collapsible.Content className='CollapsibleContent'>
+                                                        <div>
+                                                            {getInspectorField([key], toolSystem.getAnnotation(selectedAnnotationIDs[0]), handleFieldChange)}
+                                                        </div>
+                                                        {index < toolSystem.getAnnotation(selectedAnnotationIDs[0])!.inspectorArgs.length - 1 && (
+                                                            <Separator.Root className="bg-[var(--color-medium-light)]/30 h-px w-full my-3" />
+                                                        )}
+                                                    </Collapsible.Content>
+                                                </Collapsible.Root>
                                             ))}
                                         </div>
                                     ) : (
