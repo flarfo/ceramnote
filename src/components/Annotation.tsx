@@ -27,8 +27,8 @@ export class Annotation {
     //      and modify the annotation.
     inspectorArgs: string[] = [
         'color',
-        'tile_data',
         'bounds',
+        'tile_data',
     ];
     constructor(type: string, bounds: {x: number, y: number}[], associations = [], name = 'test') {
         this.type = type;
@@ -45,9 +45,9 @@ export class Annotation {
     };
 
     static copyObject: Record<string, any> = {
-        color: {},
-        tile_data: {},
-        bounds: Array<{}>
+        color: null,
+        tile_data: null,
+        bounds: null,
     };
 
     // NOTE: Logic for controlling the Annotation object should be handled by different tools.

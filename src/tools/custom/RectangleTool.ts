@@ -88,7 +88,7 @@ class RectangleTool extends ToolBase {
         this.startPoint = null;
 
         if (this.curAnnotation != null) {
-            this.toolSystem.removeAnnotation(this.curAnnotation);
+            this.toolSystem.removeAnnotation(this.curAnnotation.id);
             this.curAnnotation = null;
         }
     }

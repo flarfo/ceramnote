@@ -149,13 +149,13 @@ export const Inspector = ({
     }, [selectedAnnotationIDs]);
 
     return (
-        <div className="flex flex-col h-full bg-[var(--color-medium)] border-t border-[var(--color-medium-light)]">
+        <div className="flex flex-col h-full min-h-0 bg-[var(--color-medium)] border-t border-[var(--color-medium-light)]">
             <div className="flex-shrink-0 px-3 py-2 border-b border-[var(--color-medium-light)]">
                 <h3 className="text-xs font-medium text-[var(--color-light)] uppercase tracking-wide">Inspector</h3>
             </div>
 
-            <div className="flex-1 min-h-0 m-2">
-                <ScrollArea.Root className="h-full">
+            <div className="flex-1 min-h-0 pb-20">
+                <ScrollArea.Root className="h-full flex-1">
                     <ScrollArea.Viewport className="w-full h-full">
                         <div className="px-1">
                             {selectedAnnotationIDs.length === 1 ? (
@@ -164,16 +164,15 @@ export const Inspector = ({
                                         <div className="space-y-4">
                                             {toolSystem.getAnnotation(selectedAnnotationIDs[0])!.inspectorArgs.map((key: string, index: number) => (
                                                 <Collapsible.Root key={index} defaultOpen={true} className="space-y-2">
-                                                    <div className='flex items-center gap-2'>
-
-                                                    <Collapsible.Trigger className="group text-xs font-semibold text-[var(--color-light)] flex items-center justify-between tracking-wide hover:bg-[var(--color-medium-light)]/20 px-2 py-1 rounded transition-colors">
-                                                        <ChevronDownIcon
-                                                            width={14}
-                                                            height={14}
-                                                            className="transform transition-transform duration-300 group-data-[state=closed]:-rotate-90"
-                                                        />
-                                                    </Collapsible.Trigger>
-                                                        <span>{key}</span>
+                                                    <div className='flex items-center gap-2 border-t border-(--color-medium-light) text-(--color-light) transition-colors'>
+                                                        <Collapsible.Trigger className="group w-full" >
+                                                            <ChevronDownIcon
+                                                                width={16}
+                                                                height={16}
+                                                                className="transform transition-transform duration-300 group-data-[state=closed]:-rotate-90 hover:cursor-pointer"
+                                                            />
+                                                        </Collapsible.Trigger>
+                                                        <span className='font-mono font-medium text-(--color-light) '>{key}</span>
                                                         <button
                                                             onClick={(e) => {
                                                                 // Copy button
@@ -185,10 +184,11 @@ export const Inspector = ({
                                                                     }
                                                                 }
                                                             }}
-                                                            className="opacity-50 hover:opacity-100 transition-opacity p-1 rounded hover:bg-[var(--color-medium-light)]"
                                                             title={`Copy ${key}`}
                                                         >
-                                                            <CopyIcon width={12} height={12} />
+                                                            <CopyIcon width={16} height={16} 
+                                                                className='opacity-50 hover:opacity-100 transition-opacity hover:cursor-pointer'
+                                                            />
                                                         </button>
                                                         <button
                                                             onClick={(e) => {
@@ -197,15 +197,18 @@ export const Inspector = ({
 
                                                                 if (Annotation.copyObject.hasOwnProperty(key) && annotation?.hasOwnProperty(key)) {
                                                                     if (annotation) {
-                                                                        annotation[key] = Annotation.copyObject[key];
+                                                                        if (Annotation.copyObject[key] !== null) {
+                                                                            annotation[key] = Annotation.copyObject[key];
+                                                                        }
                                                                         setVersion(v => v + 1);
                                                                     }
                                                                 }
                                                             }}
-                                                            className="opacity-50 hover:opacity-100 transition-opacity p-1 rounded hover:bg-[var(--color-medium-light)]"
                                                             title={`Paste ${key}`}
                                                         >
-                                                            <ClipboardIcon width={12} height={12} />
+                                                            <ClipboardIcon width={16} height={16} 
+                                                                className='opacity-50 hover:opacity-100 transition-opacity hover:cursor-pointer'
+                                                            />
                                                         </button>
                                                     </div>
 
