@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Menubar, Dialog } from 'radix-ui';
 import {
 	CheckIcon,
@@ -43,12 +43,12 @@ const Filebar: React.FC<FilebarProps> = ({
 	onExportCurrent
 }) => {
 
-	const [checkedSelection, setCheckedSelection] = React.useState([
+	const [checkedSelection, setCheckedSelection] = useState([
 		CHECK_ITEMS[1],
 	]);
 
-	const [isClassesDialogOpen, setIsClassesDialogOpen] = React.useState(false);
-	const [classItems, setClassItems] = React.useState<Array<{ id: string, name: string, color: string }>>([]);
+	const [isClassesDialogOpen, setIsClassesDialogOpen] = useState(false);
+	const [classItems, setClassItems] = useState<Array<{ id: string, name: string, color: string }>>([]);
 
 	/**
 	 * Select a ONNX model from the list of models,

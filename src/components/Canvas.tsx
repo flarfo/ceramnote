@@ -20,6 +20,8 @@ interface CanvasProps {
     toolSystem: ToolSystem;
     configManager: ConfigManager;
     viewport: { x: number, y: number, scale: number };
+    annotations: { [imageIndex: number]: { [annotationId: string]: Annotation } };
+    selectedAnnotationIDs: string[];
 }
 
 /**
@@ -27,7 +29,7 @@ interface CanvasProps {
  * Handles drawing, event detection, and exporting annotations.
  */
 const Canvas: React.FC<CanvasProps> = (props) => {
-    const { image, currentImageIndex, backgroundColor, toolSystem, configManager, viewport } = props;
+    const { image, currentImageIndex, backgroundColor, toolSystem, configManager, viewport, annotations, selectedAnnotationIDs } = props;
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
     const canvasSize = {
@@ -74,11 +76,11 @@ const Canvas: React.FC<CanvasProps> = (props) => {
             ctx.stroke();
         }
 
-        const annots = Object.values(toolSystem?.annotations?.[currentImageIndex] || []);
+        const annots = Object.values(annotations?.[currentImageIndex] || []);
         annots.forEach((annot: Annotation) => {
             // Draw rectangle annotations for the current image
             if (annot.type === 'rectangle' && annot.bounds && annot.bounds.length === 2) {
-                const selected = toolSystem?.selectedAnnotationIDs.includes(annot.id);
+                const selected = selectedAnnotationIDs.includes(annot.id);
 
                 // Get bounds
                 const [start, end] = annot.bounds;
@@ -165,7 +167,7 @@ const Canvas: React.FC<CanvasProps> = (props) => {
         };
 
         render();
-    }, [draw, viewport, mousePos]);
+    }, [draw, viewport, annotations, selectedAnnotationIDs, mousePos, canvasSize]);
 
     // TODO: add tool default behaviours for certain button presses.
     // For example, select tool MMB should pan
@@ -230,6 +232,8 @@ const Canvas: React.FC<CanvasProps> = (props) => {
                 setMousePos(null)
                 toolSystem.handleMouseLeave(e);
             }}
+
+
         />
     );
 };

@@ -8,7 +8,7 @@ import RectangleTool from './custom/RectangleTool';
 import PanTool from './custom/PanTool';
 import SelectorTool from './custom/SelectorTool';
 import { TriangleRightIcon } from '@radix-ui/react-icons';
-import React from 'react';
+import React, { type SetStateAction } from 'react';
 import { ConfigManager } from './config_manager';
 
 /**
@@ -18,16 +18,17 @@ import { ConfigManager } from './config_manager';
 export class ToolSystem {
     tools: ToolBase[] = [];
     currentTool: ToolBase | null = null;
-    annotations: { [imageIndex: number]: { [annotationId: string]: Annotation } } = {};
-    selectedAnnotationIDs: string[] = [];
+    annotations: { [imageIndex: number]: { [annotationId: string]: Annotation } };
+    currentImageIndex: number;
+    selectedAnnotationIDs: string[];
     selectedHandle: AnnotationHandle | null = null;
     keybindMap: { [key: string]: string } = {};
     toolConfig: { [key: string]: any } = {};
-    currentImageIndex: number = 0;
     currentAnnotationClass: string = '';
     annotationGrid: Annotation[][] = [];
     gridPosition: { row: number, col: number } = { row: 0, col: 0 };
     viewport: { x: number, y: number, scale: number };
+    setAnnotations: React.Dispatch<React.SetStateAction<{ [imageIndex: number]: { [annotationId: string]: Annotation } }>>;
     setViewport: React.Dispatch<React.SetStateAction<{ x: number, y: number, scale: number }>>;
     setSelectedAnnotationIDs: React.Dispatch<React.SetStateAction<string[]>>;
     configManager: ConfigManager | null = null;
@@ -35,8 +36,12 @@ export class ToolSystem {
     onAnnotationClassChange?: (className: string) => void;
 
     constructor(
-        setViewport: React.Dispatch<React.SetStateAction<{ x: number, y: number, scale: number }>>,
+        annotations: { [imageIndex: number]: { [annotationId: string]: Annotation } },
+        selectedAnnotationIDs: string[],
+        currentImageIndex: number,
+        setAnnotations: React.Dispatch<React.SetStateAction<{ [imageIndex: number]: { [annotationId: string]: Annotation } }>>,
         setSelectedAnnotationIDs: React.Dispatch<React.SetStateAction<string[]>>,
+        setViewport: React.Dispatch<React.SetStateAction<{ x: number, y: number, scale: number }>>,
         configManager?: ConfigManager,
         onToolChange?: (tool: ToolBase | null) => void,
         onAnnotationClassChange?: (className: string) => void,
@@ -47,6 +52,10 @@ export class ToolSystem {
             new SelectorTool(this),
             new RectangleTool(this),
         ];
+        this.annotations = annotations;
+        this.selectedAnnotationIDs = selectedAnnotationIDs;
+        this.currentImageIndex = currentImageIndex;
+        this.setAnnotations = setAnnotations;
         this.setViewport = setViewport;
         this.setSelectedAnnotationIDs = setSelectedAnnotationIDs;
         this.onAnnotationClassChange = onAnnotationClassChange;
@@ -121,21 +130,31 @@ export class ToolSystem {
      * @param annotation Annotation to add
      */
     addAnnotation(annotation: Annotation) {
-        if (!this.annotations[this.currentImageIndex]) {
-            this.annotations[this.currentImageIndex] = {};
-        }
-
-        this.annotations[this.currentImageIndex][annotation.id] = annotation;
-
-        // Rebuild the grid after adding annotation
-        this.buildAnnotationGrid();
+        this.setAnnotations(prev => {
+            const imageIndex = this.currentImageIndex;
+            const prevImageAnnots = prev[imageIndex] || {};
+            return {
+                ...prev,
+                [imageIndex]: {
+                    ...prevImageAnnots,
+                    [annotation.id]: annotation
+                }
+            };
+        });
     }
 
     removeAnnotation(annotationID: string) {
-        delete this.annotations[this.currentImageIndex][annotationID];
+        this.setAnnotations(prev => {
+            const imageIndex = this.currentImageIndex;
+            const prevImageAnnots = { ...(prev[imageIndex] || {}) };
+            delete prevImageAnnots[annotationID];
+            return {
+                ...prev,
+                [imageIndex]: prevImageAnnots
+            };
+        });
+
         this.setSelectedAnnotationIDs([]);
-        // Rebuild the grid after removing annotation
-        this.buildAnnotationGrid();
     }
 
     getAnnotation(annotationID: string) {
@@ -167,7 +186,7 @@ export class ToolSystem {
 
             const centerY = (annotation.bounds[0].y + annotation.bounds[1].y) / 2;
 
-            // Find existing row or create new one
+            // Find existing row/create new one
             let targetRow = rows.find(row => Math.abs(row.y - centerY) <= rowThreshold);
 
             if (!targetRow) {
@@ -199,12 +218,6 @@ export class ToolSystem {
         }
         if (this.annotationGrid.length > 0 && this.gridPosition.col >= this.annotationGrid[this.gridPosition.row].length) {
             this.gridPosition.col = Math.max(0, this.annotationGrid[this.gridPosition.row].length - 1);
-        }
-
-        // If there are annotations but none selected, select the first one
-        if (this.annotationGrid.length > 0 && this.selectedAnnotationIDs.length === 0) {
-            this.gridPosition = { row: 0, col: 0 };
-            this.selectAnnotationAtGridPosition();
         }
     }
 
@@ -284,12 +297,24 @@ export class ToolSystem {
                         col: currentCol - 1
                     };
                 }
+                else if (currentRow > 0) {
+                    this.gridPosition = {
+                        row: currentRow - 1,
+                        col: this.annotationGrid[currentRow - 1].length
+                    };
+                }
                 break;
             case 'right':
                 if (currentCol < this.annotationGrid[currentRow].length - 1) {
                     this.gridPosition = {
                         row: currentRow,
                         col: currentCol + 1
+                    };
+                }
+                else if (currentRow < this.annotationGrid.length - 1) {
+                    this.gridPosition = {
+                        row: currentRow + 1,
+                        col: 0
                     };
                 }
                 break;
@@ -329,7 +354,6 @@ export class ToolSystem {
     }
 
     selectAnnotations(annotationIDs: string[]) {
-        this.selectedAnnotationIDs = annotationIDs;
         this.setSelectedAnnotationIDs(annotationIDs);
 
         // Update grid position to match the newly selected annotation
@@ -352,8 +376,7 @@ export class ToolSystem {
         this.setSelectedAnnotationIDs([]);
         this.selectedHandle = null;
 
-        // Rebuild the grid for the new image
-        this.buildAnnotationGrid();
+
     }
 
     // EVENT DISPATCHERS

@@ -11,7 +11,7 @@ export default defineConfig({
     viteStaticCopy({
       targets: [
         {
-          src: 'node_modules/onnxruntime-web/dist/*.wasm',
+          src: 'node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm',
           dest: './',
         },
         {
@@ -22,7 +22,4 @@ export default defineConfig({
     }),
   ],
   assetsInclude: ['**/*.onnx', '**/*.wasm'],
-  optimizeDeps: {
-    exclude: ["onnxruntime-web"],
-  }
 })
