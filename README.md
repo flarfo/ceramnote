@@ -1,54 +1,159 @@
-# React + TypeScript + Vite
+# ceramnote
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**ceramnote** is a React + TypeScript single-page application for digitizing and annotating images of a physical ceramic tile database. It enables users to upload images, create and manage annotations, run AI-powered detection models, and export structured data for digital archiving or analysis.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Features
 
-## Expanding the ESLint configuration
+- **Image Upload & Navigation**
+  - Upload one or multiple images of ceramic tiles.
+  - Navigate between images using the custom scrollbar or keyboard shortcuts.
+  - Visual indicator for annotation density per image.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **Annotation Tools**
+  - Draw, select, and edit bounding box annotations on images.
+  - Inspector panel for editing annotation properties.
+  - Copy/paste annotation fields for efficient data entry.
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+- **AI Model Integration**
+  - Load ONNX models (e.g., YOLO) for automated detection of tiles or features.
+  - Run inference on images to auto-generate annotations.
+  - Support for custom user-uploaded ONNX models.
+
+- **Annotation Management**
+  - View, select, and delete annotations.
+  - Keyboard navigation for rapid annotation review.
+  - Annotation grid for spatial navigation.
+
+- **Export Functionality**
+  - Export all or current image annotations as a ZIP file.
+  - ZIP includes cropped tile images and a JSON file with annotation data.
+
+---
+
+## 🖼️ Screenshots
+
+<!--
+Add screenshots here, e.g.:
+![Main UI](docs/screenshot-main.png)
+![Annotation Inspector](docs/screenshot-inspector.png)
+-->
+
+---
+
+## 🛠️ Getting Started
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) (v18+ recommended)
+- [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
+
+### Installation
+
+```bash
+git clone https://github.com/yourusername/ceramnote.git
+cd ceramnote
+npm install
+# or
+yarn install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Running the App
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+```bash
+npm run dev
+# or
+yarn dev
 ```
+
+Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+---
+
+## 📝 Usage Guide
+
+### 1. Upload Images
+
+- Click the **Filebar** at the top to upload one or more images of ceramic tiles.
+- Use the **AnnotationScrollbar** (right panel) to navigate between images.
+
+### 2. Annotate Tiles
+
+- Use the **Toolbar** (left panel) to select annotation tools (rectangle, selector, etc.).
+- Draw bounding boxes on the canvas to create annotations.
+- Select an annotation to edit its properties in the **Inspector** (left panel).
+
+### 3. AI-Assisted Annotation
+
+- Load built-in or custom ONNX models via the Filebar.
+- Click **Preprocess** or press <kbd>Space</kbd> to run detection models and auto-generate annotations.
+
+### 4. Manage Annotations
+
+- Use keyboard shortcuts for navigation:
+  - <kbd>Ctrl</kbd> + <kbd>←</kbd>/<kbd>→</kbd>: Switch images
+  - <kbd>←</kbd>/<kbd>→</kbd>/<kbd>↑</kbd>/<kbd>↓</kbd>: Navigate annotation grid
+  - <kbd>Delete</kbd>: Delete selected annotation
+- Copy/paste annotation fields using the Inspector.
+
+### 5. Export Data
+
+- Click **Export All** or **Export Current** in the Filebar.
+- Progress is shown in a modal loading bar (with cancel option).
+- Downloaded ZIP contains:
+  - Cropped tile images (`images/`)
+  - `annotations.json` with all annotation data
+
+---
+
+## ⚙️ Configuration
+
+- Model files should be placed in the `/models` directory or uploaded via the UI.
+
+---
+
+## 🧩 Tech Stack
+
+- **React** + **TypeScript**
+- **Vite** (build tool)
+- **TailwindCSS** (styling)
+- **Radix UI** (UI primitives)
+- **ONNX Runtime Web** (AI inference)
+- **JSZip** (exporting ZIP files)
+- **fast-average-color** (color analysis)
+- Custom annotation and tool system
+
+---
+
+## 📦 Building for Production
+
+```bash
+npm run build
+# or
+yarn build
+```
+The output will be in the `dist/` directory.
+
+## 📦 Usage with Docker
+...TBA
+
+---
+
+## 📄 License
+
+...TBA
+
+---
+
+## ✨ Acknowledgements
+
+- [Radix UI](https://www.radix-ui.com/)
+- [TailwindCSS](https://tailwindcss.com/)
+- [ONNX Runtime](https://onnxruntime.ai/)
+- [JSZip](https://stuk.github.io/jszip/)
+- [fast-average-color](https://github.com/fast-average-color/fast-average-color)
+
+---
+
+**For questions or support, please open an issue on GitHub.**
