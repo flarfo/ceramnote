@@ -8,7 +8,7 @@ export class Annotation {
     type: string;
     name: string;
     id: string;
-    color: Record<string, string | number> = {
+    color_data: Record<string, string | number> = {
         'ColorName': '',
         'ColorL': 0,
         'ColorA': 0,
@@ -26,7 +26,7 @@ export class Annotation {
     // Inspector Arguments; these are automatically processed by the Inspector component to display
     //      and modify the annotation.
     inspectorArgs: string[] = [
-        'color',
+        'color_data',
         'tile_data',
         'bounds',
     ];
@@ -45,7 +45,7 @@ export class Annotation {
     };
 
     static copyObject: Record<string, any> = {
-        color: null,
+        color_data: null,
         tile_data: null,
         bounds: null,
     };
@@ -60,7 +60,7 @@ export class Annotation {
     getData() {
         return {
             ...this.tile_data,
-            ...this.color,
+            ...this.color_data,
         };
     }
 };

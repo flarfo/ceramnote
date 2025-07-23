@@ -466,9 +466,9 @@ function App() {
 								const green = parseFloat(color_string[2]);
 								const blue = parseFloat(color_string[3]);
 								const lab = rgbToLab({ red, green, blue });
-								annotation.tile_data.ColorL = lab.luminance;
-								annotation.tile_data.ColorA = lab.a;
-								annotation.tile_data.ColorB = lab.b;
+								annotation.color_data.ColorL = lab.luminance;
+								annotation.color_data.ColorA = lab.a;
+								annotation.color_data.ColorB = lab.b;
 							}
 							catch (error) {
 								console.error('Error calculating color:', error);
