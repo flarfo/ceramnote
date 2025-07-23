@@ -517,21 +517,21 @@ function App() {
 
 			// Generate the ZIP file and trigger download
 			const zipBlob = await zip.generateAsync({ type: 'blob' });
-			const zipUrl = URL.createObjectURL(zipBlob);
+			//const zipUrl = URL.createObjectURL(zipBlob);
 
 			const formData = new FormData();
 			formData.append('file', zipBlob, 'annotations.zip');
 
-			/*await fetch("http://localhost:8000/upload", {
+			await fetch("http://localhost:8000/upload", {
 				method: "POST",
 				body: formData,
-			});*/
+			});
 
-			const a = document.createElement('a');
+			/*const a = document.createElement('a');
 			a.href = zipUrl;
 			a.download = 'annotations.zip';
 			a.click();
-			URL.revokeObjectURL(zipUrl);
+			URL.revokeObjectURL(zipUrl);*/
 
 			setCurrentExportStep('Export complete!');
 		}
