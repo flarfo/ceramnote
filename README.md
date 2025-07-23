@@ -136,7 +136,11 @@ yarn build
 The output will be in the `dist/` directory.
 
 ## 📦 Usage with Docker
-...TBA
+
+```bash
+docker build -t ceramnote .
+docker run -d --name ceramnote-container -p 80:80 ceramnote
+```
 
 ---
 
