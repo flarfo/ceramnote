@@ -40,7 +40,7 @@ const Filebar: React.FC<FilebarProps> = ({
 	onCustomModelUpload,
 	onPreprocess,
 	onExportAll,
-	onExportCurrent
+	onExportCurrent,
 }) => {
 
 	const [checkedSelection, setCheckedSelection] = useState([
@@ -172,13 +172,12 @@ const Filebar: React.FC<FilebarProps> = ({
 									<Menubar.Item className='MenubarItem'
 										onClick={onExportAll}
 									>
-										Export All <div className='RightSlot'
-										>CTRL + Shift + E</div>
+										Export All
 									</Menubar.Item>
 									<Menubar.Item className='MenubarItem'
 										onClick={onExportCurrent}
 									>
-										Export Current <div className='RightSlot'>CTRL + Shift + I</div>
+										Export Current
 									</Menubar.Item>
 								</Menubar.SubContent>
 							</Menubar.Portal>
@@ -186,76 +185,7 @@ const Filebar: React.FC<FilebarProps> = ({
 					</Menubar.Content>
 				</Menubar.Portal>
 			</Menubar.Menu>
-			{/** EDIT */}
-			<Menubar.Menu>
-				<Menubar.Trigger className='MenubarTrigger'>Edit</Menubar.Trigger>
-				<Menubar.Portal>
-					<Menubar.Content
-						className='MenubarContent'
-						align='start'
-						sideOffset={5}
-						alignOffset={-3}
-					>
-						<Menubar.Item className='MenubarItem'>
-							Undo <div className='RightSlot'>CTRL + Z</div>
-						</Menubar.Item>
-						<Menubar.Item className='MenubarItem'>
-							Redo <div className='RightSlot'>CTRL + Y</div>
-						</Menubar.Item>
-						<Menubar.Separator className='MenubarSeparator' />
-						<Menubar.Item className='MenubarItem'>Cut</Menubar.Item>
-						<Menubar.Item className='MenubarItem'>Copy</Menubar.Item>
-						<Menubar.Item className='MenubarItem'>Paste</Menubar.Item>
-					</Menubar.Content>
-				</Menubar.Portal>
-			</Menubar.Menu>
-			{/** VIEW */}
-			<Menubar.Menu>
-				<Menubar.Trigger className='MenubarTrigger'>View</Menubar.Trigger>
-				<Menubar.Portal>
-					<Menubar.Content
-						className='MenubarContent'
-						align='start'
-						sideOffset={5}
-						alignOffset={-14}
-					>
-						{CHECK_ITEMS.map((item) => (
-							<Menubar.CheckboxItem
-								className='MenubarCheckboxItem inset'
-								key={item}
-								checked={checkedSelection.includes(item)}
-								onCheckedChange={() =>
-									setCheckedSelection((current) =>
-										current.includes(item)
-											? current.filter((el) => el !== item)
-											: current.concat(item),
-									)
-								}
-							>
-								<Menubar.ItemIndicator className='MenubarItemIndicator'>
-									<CheckIcon />
-								</Menubar.ItemIndicator>
-								{item}
-							</Menubar.CheckboxItem>
-						))}
-						<Menubar.Separator className='MenubarSeparator' />
-						<Menubar.Item className='MenubarItem inset'>
-							Reload <div className='RightSlot'>⌘ R</div>
-						</Menubar.Item>
-						<Menubar.Item className='MenubarItem inset' disabled>
-							Force Reload <div className='RightSlot'>⇧ ⌘ R</div>
-						</Menubar.Item>
-						<Menubar.Separator className='MenubarSeparator' />
-						<Menubar.Item className='MenubarItem inset'>
-							Toggle Fullscreen
-						</Menubar.Item>
-						<Menubar.Separator className='MenubarSeparator' />
-						<Menubar.Item className='MenubarItem inset'>
-							Hide Sidebar
-						</Menubar.Item>
-					</Menubar.Content>
-				</Menubar.Portal>
-			</Menubar.Menu>
+			{/** CNN */}
 			<Menubar.Menu>
 				<Menubar.Trigger className='MenubarTrigger'>Preprocess</Menubar.Trigger>
 				<Menubar.Portal>
@@ -347,9 +277,6 @@ const Filebar: React.FC<FilebarProps> = ({
 								</Menubar.SubContent>
 							</Menubar.Portal>
 						</Menubar.Sub>
-						<Menubar.Separator className='MenubarSeparator' />
-						<Menubar.Item className='MenubarItem'>Import</Menubar.Item>
-						<Menubar.Item className='MenubarItem'>Download</Menubar.Item>
 					</Menubar.Content>
 				</Menubar.Portal>
 			</Menubar.Menu>

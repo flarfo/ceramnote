@@ -135,6 +135,12 @@ function App() {
 		}
 	}, [annotations]);
 
+	useEffect(() => {
+		if (toolSystemRef.current) {
+			toolSystemRef.current.selectedAnnotationIDs = selectedAnnotationIDs;
+		}
+	}, [selectedAnnotationIDs]);
+
 	const toolSystem = toolSystemRef.current;
 	const configManager = configManagerRef.current;
 
@@ -359,6 +365,7 @@ function App() {
 	  * Saves all images to annotations.zip/images and all annotations to annotations.zip/annotations.json.
 	* Save code found in Annotation.save() [<-- TO IMPLEMENT]
 	*/
+
 	const exportAnnotations = async (onlyCurrent: boolean) => {
 		if (!imageFiles) return;
 
@@ -370,8 +377,6 @@ function App() {
 		try {
 			// Create new zip folder to store all data
 			const zip = new JSZip();
-			const imagesFolder = zip.folder('images');
-			const annotationsData: { annotation: any; imageUrl: string }[] = [];
 
 			// Get current index starting point 
 			const iterations = onlyCurrent ? 1 : imageFiles.length;
@@ -387,11 +392,22 @@ function App() {
 			let currentStepIndex = 0;
 
 			for (let i = startIndex; i < (onlyCurrent ? startIndex + 1 : iterations); i++) {
+				// Get the original image name (without extension)
+				const file = imageFiles[i];
+				const imageName = file.name.replace(/\.[^/.]+$/, "");
+				// Create a folder for this image
+				const imageFolder = zip.folder(imageName);
+				const imagesFolder = imageFolder?.folder('images');
+				const annotationsData: { annotation: any; imageUrl: string }[] = [];
+
+				// Store the original image in the folder
+				const originalExt = file.name.split('.').pop() || 'jpg';
+				imageFolder?.file(`${imageName}.${originalExt}`, file);
+
 				// Load the image for this iteration if it's not the current one
 				let imageToProcess = image;
 				if (!onlyCurrent && i !== currentImageIndex) {
 					setCurrentExportStep(`Loading image ${i + 1} of ${imageFiles.length}...`);
-					// Create a temporary image for non-current images
 					imageToProcess = await new Promise<HTMLImageElement>((resolve, reject) => {
 						const tempImg = new Image();
 						tempImg.onload = () => resolve(tempImg);
@@ -439,11 +455,10 @@ function App() {
 							const fileName = `${annotation.id}.jpg`;
 							imagesFolder?.file(fileName, blob);
 
-							// Gets the average color and adds to annotation
 							const url = URL.createObjectURL(blob);
 							const fac = new FastAverageColor();
 
-							// Wait for color calculation to complete before proceeding
+							// Color calculation
 							try {
 								const color: FastAverageColorResult = await fac.getColorAsync(url, { algorithm: 'dominant' });
 								const color_string = color.rgb.split(/[,()]/);
@@ -470,13 +485,13 @@ function App() {
 						}
 					}
 				}
+
+				// Add the JSON file to the image's folder
+				imageFolder?.file('annotations.json', JSON.stringify(annotationsData, null, 2));
 			}
 
 			setCurrentExportStep('Generating ZIP file...');
 			setCurrentExportSubStep('');
-
-			// Add the JSON file to the ZIP
-			zip.file('annotations.json', JSON.stringify(annotationsData, null, 2));
 
 			// Generate the ZIP file and trigger download
 			const zipBlob = await zip.generateAsync({ type: 'blob' });
@@ -521,9 +536,7 @@ function App() {
 				onExportAll={exportAllAnnotations}
 				onExportCurrent={exportCurrentAnnotations}
 			/>
-			<PanelGroup direction="horizontal" style={{ height: '100vh' }}
-
-			>
+			<PanelGroup direction="horizontal" style={{ height: '100vh' }}>
 				<Panel defaultSize={15} minSize={10} className='bg-(--color-medium) min-h-0 h-full'>
 					{toolSystem && (
 						<>

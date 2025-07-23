@@ -27,8 +27,8 @@ export class Annotation {
     //      and modify the annotation.
     inspectorArgs: string[] = [
         'color',
-        'bounds',
         'tile_data',
+        'bounds',
     ];
     constructor(type: string, bounds: {x: number, y: number}[], associations = [], name = 'test') {
         this.type = type;
@@ -59,7 +59,8 @@ export class Annotation {
     // Save/export logic placeholder
     getData() {
         return {
-            ...this.tile_data
+            ...this.tile_data,
+            ...this.color,
         };
     }
 };

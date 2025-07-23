@@ -38,7 +38,7 @@ export const inference_pipeline = async (input_el: HTMLImageElement, sessionsCon
 
         const results = [];
         const [batch, attrs, num_anchors] = output0.dims;
-        const confidenceThreshold = 0.7;
+        const confidenceThreshold = 0.8;
 
         // Post process
         for (let i = 0; i < num_anchors; i++) {
