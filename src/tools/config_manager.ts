@@ -97,7 +97,7 @@ export class ConfigManager {
     // Persistence methods (for future use with localStorage)
     saveToStorage(): void {
         try {
-            localStorage.setItem('aknote-config', JSON.stringify(this.config));
+            localStorage.setItem('ceramnote-config', JSON.stringify(this.config));
         } catch (error) {
             console.warn('Failed to save config to localStorage:', error);
         }
@@ -105,7 +105,7 @@ export class ConfigManager {
 
     loadFromStorage(): boolean {
         try {
-            const stored = localStorage.getItem('aknote-config');
+            const stored = localStorage.getItem('ceramnote-config');
             if (stored) {
                 const parsedConfig = JSON.parse(stored);
                 this.config = { ...DEFAULT_CONFIG, ...parsedConfig };
