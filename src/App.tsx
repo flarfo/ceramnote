@@ -458,9 +458,33 @@ function App() {
 							const url = URL.createObjectURL(blob);
 							const fac = new FastAverageColor();
 
-							// Color calculation
 							try {
-								const color: FastAverageColorResult = await fac.getColorAsync(url, { algorithm: 'dominant' });
+								// Load the cropped image into an <img>
+								const imgForColor = new window.Image();
+								imgForColor.src = url;
+								await new Promise(resolve => { imgForColor.onload = resolve; });
+
+								// Create a temp canvas for color calculation (smaller area)
+								const marginRatio = 0.25; // 15% margin on each side
+								const cropW = imgForColor.width;
+								const cropH = imgForColor.height;
+								const marginX = cropW * marginRatio;
+								const marginY = cropH * marginRatio;
+								const colorW = cropW - 2 * marginX;
+								const colorH = cropH - 2 * marginY;
+
+								const colorCanvas = document.createElement('canvas');
+								colorCanvas.width = colorW;
+								colorCanvas.height = colorH;
+								const colorContext = colorCanvas.getContext('2d');
+								colorContext?.drawImage(
+									imgForColor,
+									marginX, marginY, colorW, colorH, // source rect
+									0, 0, colorW, colorH              // dest rect
+								);
+
+								// Now calculate color from the smaller region
+								const color: FastAverageColorResult = await fac.getColorAsync(colorCanvas, { algorithm: 'simple' });
 								const color_string = color.rgb.split(/[,()]/);
 								const red = parseFloat(color_string[1]);
 								const green = parseFloat(color_string[2]);
@@ -469,12 +493,10 @@ function App() {
 								annotation.color_data.ColorL = lab.luminance;
 								annotation.color_data.ColorA = lab.a;
 								annotation.color_data.ColorB = lab.b;
-							}
-							catch (error) {
+							} catch (error) {
 								console.error('Error calculating color:', error);
 							}
 
-							// Clean up the blob URL
 							URL.revokeObjectURL(url);
 
 							// Add annotation data to JSON
@@ -500,16 +522,16 @@ function App() {
 			const formData = new FormData();
 			formData.append('file', zipBlob, 'annotations.zip');
 
-			await fetch("http://localhost:8000/upload", {
+			/*await fetch("http://localhost:8000/upload", {
 				method: "POST",
 				body: formData,
-			});
+			});*/
 
-			/*const a = document.createElement('a');
+			const a = document.createElement('a');
 			a.href = zipUrl;
 			a.download = 'annotations.zip';
 			a.click();
-			URL.revokeObjectURL(zipUrl);*/
+			URL.revokeObjectURL(zipUrl);
 
 			setCurrentExportStep('Export complete!');
 		}
