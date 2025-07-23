@@ -133,7 +133,7 @@ npm run build
 # or
 yarn build
 ```
-The output will be in the `dist/` directory. It can be run directly via\
+The output will be in the `dist/` directory. It can be run directly via
 ```bash
 npm run preview
 # or
