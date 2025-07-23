@@ -141,6 +141,7 @@ The output will be in the `dist/` directory.
 docker build -t ceramnote .
 docker run -d --name ceramnote-container -p 80:80 ceramnote
 ```
+ceramnote will run on port 80. Visit https://localhost:80 to start annotating.
 
 ---
 
