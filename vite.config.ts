@@ -21,5 +21,5 @@ export default defineConfig({
       ],
     }),
   ],
-  assetsInclude: ['**/*.onnx', '**/*.wasm'],
+  assetsInclude: ['**/*.onnx', '**/*.wasm']
 })
