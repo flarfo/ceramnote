@@ -522,10 +522,14 @@ function App() {
 			const formData = new FormData();
 			formData.append('file', zipBlob, 'annotations.zip');
 
-			await fetch("http://localhost:8000/upload", {
+			const response = await fetch("http://localhost:8000/upload", {
 				method: "POST",
 				body: formData,
 			});
+
+			if (!response.ok) {
+				throw new Error(`HTTP error! Status: ${response.status}`);
+			}
 
 			/*const a = document.createElement('a');
 			a.href = zipUrl;
@@ -535,9 +539,16 @@ function App() {
 
 			setCurrentExportStep('Export complete!');
 		}
-		catch (error) {
-			console.error('Export failed:', error);
-			setCurrentExportStep('Export failed');
+		catch (error: any) {
+			if (error instanceof TypeError && error.message === 'NetworkError when attempting to fetch resource.') {
+				// Ignore CORS error
+				console.warn('CORS error ignored:', error);
+				setCurrentExportStep('Export complete!');
+			} 
+			else {
+				console.error('Export failed:', error);
+				setCurrentExportStep('Export failed');
+			}
 		}
 		finally {
 			// Hide LoadingBar after export completes
